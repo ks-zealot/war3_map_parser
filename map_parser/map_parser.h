@@ -8,6 +8,7 @@
 
 #include <fstream>
 #include "header_parser.h"
+#include "mpq_parser.h"
 
 class map_parser {
 public:
@@ -19,6 +20,7 @@ public:
 private:
    std::ifstream& _map;
     header_parser hp;
+    mpq_parser mpqParser;
 };
 
 

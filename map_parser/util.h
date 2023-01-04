@@ -7,23 +7,38 @@
 
 #include <fstream>
 
-int read_int_le(std::ifstream& map) {
-    char *bytes = new char[4];
-    int sum = 0;
-    map.read(bytes, 4);
-    sum += bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24);
-    delete[] bytes;
-    return sum;
-}
+unsigned read_int_le(std::ifstream& map) ;
+unsigned read_int_le(char* data) ;
 
-int16_t read_int_16_le(std::ifstream& map) {
-    char *bytes = new char[2];
-    int16_t sum = 0;
-    map.read(bytes, 2);
-    sum += bytes[0] | (bytes[1] << 8)  ;
-    delete[] bytes;
-    return sum;
-}
+uint16_t read_int_16_le(std::ifstream& map) ;
+
+// Swaps a signed 16-bit integer
+int16_t SwapInt16(uint16_t val);
+
+// Swaps an unsigned 16-bit integer
+uint16_t SwapUInt16(uint16_t val);
+
+// Swaps a signed 32-bit integer
+int32_t SwapInt32(uint32_t val);
+
+// Swaps an unsigned 32-bit integer
+uint32_t SwapUInt32(uint32_t val);
+
+// Swaps a signed 64-bit integer
+int64_t SwapInt64(uint64_t val);
+
+// Swaps an unsigned 64-bit integer
+uint64_t SwapUInt64(uint64_t val);
+
+// Swaps array of unsigned 16-bit integers
+void ConvertUInt16Buffer(void * ptr, size_t length);
+
+// Swaps array of unsigned 32-bit integers
+void ConvertUInt32Buffer(void * ptr, size_t length);
+
+// Swaps array of unsigned 64-bit integers
+void ConvertUInt64Buffer(void * ptr, size_t length);
+
 
 
 #endif //WAR3_MAP_PARSER_UTIL_H
