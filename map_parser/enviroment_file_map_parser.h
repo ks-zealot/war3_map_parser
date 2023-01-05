@@ -14,6 +14,8 @@ public:
     enviroment_file_map_parser(block_table_entry &entry, std::ifstream &fstream) : abstract_map_file_parser(entry, fstream) {};
 
     void parse() override;
+
+    void read_block(const std::vector<unsigned int> &offset_table, int i);
 };
 
 

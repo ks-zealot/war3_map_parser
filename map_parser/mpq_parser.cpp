@@ -47,10 +47,10 @@ void mpq_parser::parse() {
     int16_t format_version = read_int_16_le(_map);
     std::cout << "format version " << format_version << std::endl;
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    char shift = _map.get();
+    int16_t shift = read_int_16_le(_map);
+    unsigned sector_size = 0x200 << shift;
     std::cout << "SectorSizeShift " << shift << std::endl;
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    _map.get();
     int hash_table_offset = read_int_le(_map);
     std::cout << "hash table offset " << hash_table_offset << std::endl;
     std::this_thread::sleep_for(std::chrono::seconds(1));
