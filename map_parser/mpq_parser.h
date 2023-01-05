@@ -7,6 +7,10 @@
 
 
 #include <fstream>
+#include <vector>
+#include "../data_objects/block_table_entry.h"
+#include "../data_objects/hash_table_entry.h"
+#include "abstract_map_file_parser.h"
 
 class mpq_parser {
 public:
@@ -16,7 +20,17 @@ public:
     void parse();
 
 private:
-   int MPQ_HASH_FILE_KEY = 0x300;
+    static unsigned const HEADER_SIZE = 512;
+    std::vector<block_table_entry> block_table_entries_container;
+    std::vector<hash_table_entry> hash_table_entry_container;
+
+    block_table_entry read_block_entry(char *data, int i);
+
+    hash_table_entry read_hash_entry(char *data, int i);
+
+    int MPQ_HASH_FILE_KEY = 0x300;
+    int MPQ_HASH_TYPE_A = 0x100;
+    int MPQ_HASH_TYPE_B = 0x200;
     int MPQ_KEY_HASH_TABLE = 0xC3AF3770;  // Obtained by HashString("(hash table)", MPQ_HASH_FILE_KEY)
     int MPQ_KEY_BLOCK_TABLE = 0xEC83B3A3; // Obtained by HashString("(block table)", MPQ_HASH_FILE_KEY)
     std::ifstream &_map;
@@ -24,10 +38,13 @@ private:
     void parse_header();
 
     void read_block(char *data, int i);
-    void read_block_(char *data, int i );
-    void read_block (char *data, int i, std::string  filename );
-    void decompress_bzlib(char * in, char * out, unsigned av_in, unsigned av_out);//todo move to decompressor
-    void decompress_zlib(char * in, char * out, unsigned av_in, unsigned av_out);//todo move to decompressor
+
+    void read_block_(char *data, int i);
+
+    void read_block(char *data, int i, std::string filename);
+
+    void decompress_bzlib(char *in, char *out, unsigned av_in, unsigned av_out);//todo move to decompressor
+    void decompress_zlib(char *in, char *out, unsigned av_in, unsigned av_out);//todo move to decompressor
     unsigned cryptTable[0x500];
 
     unsigned long HashString(char *lpszFileName, unsigned long dwHashType);
@@ -43,6 +60,7 @@ private:
     void DecryptBlock(void *block, int length, unsigned int key);
 
     unsigned int HashString(const char *szFileName, unsigned int dwHashType);
+
     unsigned char AsciiToUpperTable[256] =
             {
                     0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
@@ -64,15 +82,29 @@ private:
             };
 
     // Compression types for multiple compressions
-    unsigned  char MPQ_COMPRESSION_HUFFMANN     =     0x01  ;// Huffmann compression (used on WAVE files only)
-    unsigned  char MPQ_COMPRESSION_ZLIB        =      0x02 ; // ZLIB compression
-    unsigned  char  MPQ_COMPRESSION_PKWARE     =       0x08  ;// PKWARE DCL compression
-    unsigned char MPQ_COMPRESSION_BZIP2       =      0x10  ;// BZIP2 compression (added in Warcraft III)
-    unsigned char MPQ_COMPRESSION_SPARSE      =      0x20  ;// Sparse compression (added in Starcraft 2)
-    unsigned   char MPQ_COMPRESSION_ADPCM_MONO    =    0x40 ; // IMA ADPCM compression (mono)
-    unsigned   char MPQ_COMPRESSION_ADPCM_STEREO  =    0x80 ; // IMA ADPCM compression (stereo)
-    unsigned  char MPQ_COMPRESSION_LZMA       =       0x12 ; // LZMA compression. Added in Starcraft 2. This value is NOT a combination of flags.
-    unsigned  char MPQ_COMPRESSION_NEXT_SAME  = 0xFFFFFFFF;  // Same compression
+    unsigned char MPQ_COMPRESSION_HUFFMANN = 0x01;// Huffmann compression (used on WAVE files only)
+    unsigned char MPQ_COMPRESSION_ZLIB = 0x02; // ZLIB compression
+    unsigned char MPQ_COMPRESSION_PKWARE = 0x08;// PKWARE DCL compression
+    unsigned char MPQ_COMPRESSION_BZIP2 = 0x10;// BZIP2 compression (added in Warcraft III)
+    unsigned char MPQ_COMPRESSION_SPARSE = 0x20;// Sparse compression (added in Starcraft 2)
+    unsigned char MPQ_COMPRESSION_ADPCM_MONO = 0x40; // IMA ADPCM compression (mono)
+    unsigned char MPQ_COMPRESSION_ADPCM_STEREO = 0x80; // IMA ADPCM compression (stereo)
+    unsigned char MPQ_COMPRESSION_LZMA = 0x12; // LZMA compression. Added in Starcraft 2. This value is NOT a combination of flags.
+    unsigned char MPQ_COMPRESSION_NEXT_SAME = 0xFFFFFFFF;  // Same compression
+
+    friend class block_table_entry;
+
+    unsigned int get_block_index(const char *string);
+
+    unsigned int calculate_offset(const block_table_entry &entry);
+
+    unsigned int calculate_byte_to_read(const block_table_entry &entry);
+
+    unsigned int calculate_key(const char *str, const block_table_entry &entry);
+
+    std::vector<std::string> parse_list_file(std::string basicString);
+
+    abstract_map_file_parser *get_parser(std::string basicString, block_table_entry& bp, std::ifstream& map);
 };
 
 

@@ -11,10 +11,13 @@
 
 #include "mpq_parser.h"
 #include "util.h"
+#include "abstract_map_file_parser.h"
+#include "enviroment_file_map_parser.h"
 
 mpq_parser::mpq_parser(std::ifstream &map) : _map(map) {
 
 }
+
 //00h: char(4) Magic             Indicates that the file is a MoPaQ archive. Must be ASCII "MPQ" 1Ah.
 //04h: int32 HeaderSize          Size of the archive header.
 //08h: int32 ArchiveSize         Size of the whole archive, including the header. Does not include the strong digital signature,
@@ -60,79 +63,78 @@ void mpq_parser::parse() {
     int block_table_entries = read_int_le(_map);
     std::cout << "block table entries " << block_table_entries << std::endl;
     std::this_thread::sleep_for(std::chrono::seconds(1));
-    _map.seekg(512 + block_table_offset, std::ios_base::beg);
+    block_table_entries_container = std::vector<block_table_entry>(block_table_entries);
+    hash_table_entry_container = std::vector<hash_table_entry>(hash_table_entries);
+    _map.seekg(HEADER_SIZE + block_table_offset, std::ios_base::beg);
     std::cout << "file pos now  " << _map.tellg() << std::endl;
-    std::cout << "prepare crypt table " <<  std::endl;
+    std::cout << "prepare crypt table " << std::endl;
     prepareCryptTable();
+
     char *block = new char[block_table_entries * 16];
     _map.read(block, block_table_entries * 16);
 //    ConvertUInt32Buffer(block,block_table_entries * 64);
-    DecryptMpqBlock(block, block_table_entries * 4, MPQ_KEY_BLOCK_TABLE);
+    DecryptMpqBlock(block, block_table_entries * 16, MPQ_KEY_BLOCK_TABLE);
 //    ConvertUInt32Buffer(block,block_table_entries * 64);
 //    for (int i = 0; i < block_table_entries; i++) {
 //        read_block(block, i);
 //    }
-    _map.seekg(512 + hash_table_offset, std::ios_base::beg);
+    for (int i = 0; i < block_table_entries; i++) {
+        block_table_entries_container[i] = read_block_entry(block, i);
+    }
+    _map.seekg(HEADER_SIZE + hash_table_offset, std::ios_base::beg);
     std::cout << "file pos now  " << _map.tellg() << std::endl;
     char *hashes = new char[hash_table_entries * 16];
     _map.read(hashes, hash_table_entries * 16);
-    DecryptMpqBlock(hashes, hash_table_entries * 4, MPQ_KEY_HASH_TABLE);
-    std::string listfiles = "(listfile)";
-//    unsigned dwHashIndexMask = hash_table_entries - 1;
-//    unsigned dwStartIndex = HashString(listfiles, 0x000);
-    unsigned dwName1 =HashString(listfiles.c_str(), 0x100);
-    unsigned dwName2 = HashString(listfiles.c_str(), 0x200);
-    unsigned* casted_hashes = (unsigned*)hashes;
-    int block_index = -1;
+    DecryptMpqBlock(hashes, hash_table_entries * 16, MPQ_KEY_HASH_TABLE);
     for (int i = 0; i < hash_table_entries; i++) {
-        unsigned dwName1_ =  casted_hashes[0 + (4 * i)];
-        unsigned dwName2_ =  casted_hashes[1 + (4 * i)];
-        if (dwName1 == dwName1_ && dwName2 == dwName2_) {
-            block_index = casted_hashes[3 + (4 * i)];
-        }
+        hash_table_entry_container[i] = read_hash_entry(block, i);
     }
-    if (block_index == -1) {
-        delete[] block;
-        delete[] hashes;
-        throw std::runtime_error("could not find file");
-    }
-    read_block(block, block_index, listfiles);
-    //todo судя по storklib, файлы сжаты  Bzip2, возможно там несколько способов сжатия, откуда их берут, пока не ясно
-    //95081!!!! not 95073 = 512 + 94561
-    _map.seekg(512 + 94561 + 8, std::ios_base::beg);//todo remove hardcode
+    unsigned list_file_index = get_block_index("(listfile)");
+    std::string listfiles = "(listfile)";
+    block_table_entry list_file_entry = block_table_entries_container[list_file_index];
+    read_block(block, 14, "(listfile)");
+    unsigned offset = calculate_offset(list_file_entry);
+    _map.seekg(offset, std::ios_base::beg);
     std::cout << "file pos now  " << _map.tellg() << std::endl;
-    char *lf = new  char[90 - 8];
+    unsigned byte_to_read = calculate_byte_to_read(list_file_entry);
+    char *lf = new char[byte_to_read];
 
-    _map.read(lf,90 - 8);// crc handling
-    unsigned   dwFileKey =  HashString("(listfile)", MPQ_HASH_FILE_KEY);//758152009
-    dwFileKey = (dwFileKey + 94561/* pos in mpq, not file */) ^ 188;
-    DecryptMpqBlock(lf, 20,dwFileKey);//todo вернуть деление
-    char *lf_ = new char[188];
+    _map.read(lf, byte_to_read);
+    unsigned dwFileKey = calculate_key(listfiles.c_str(),
+                                       list_file_entry);
+    DecryptMpqBlock(lf, byte_to_read, dwFileKey);
+    char *lf_ = new char[list_file_entry.file_size];
     unsigned char compression = *lf++;
-//    decompress_bzlib(lf, lf_, 88 ,188);
-    decompress_zlib(lf, lf_, 87 ,188);
-    std::string  res_files(lf_, 188);
-    std::cout << res_files << std::endl;
-//    delete[] lf;
+    decompress_zlib(lf, lf_, list_file_entry.file_comp_size - 1, list_file_entry.file_size);
+    std::string res_files(lf_, list_file_entry.file_size);
+    std::vector<std::string> detected_files = parse_list_file(res_files);
+    for (std::string s: detected_files) {
+        unsigned file_index = get_block_index(s.c_str());
+        block_table_entry entry = block_table_entries_container[file_index];
+        std::cout << "found file " << s << " with size " << entry.file_size << std::endl;
+        abstract_map_file_parser* parser = get_parser(s, entry, _map);
+        if (parser) {
+            std::cout << "for file " << s << " found parser" << std::endl;
+            parser->parse();
+        }
+        delete parser;
+    }
     delete[] lf_;
     delete[] block;
     delete[] hashes;
 }
 
-void  mpq_parser::DecryptMpqBlock(void * pvDataBlock, unsigned dwLength, unsigned dwKey1)
-{
-    unsigned   *DataPointer = (unsigned int *)pvDataBlock;
-    unsigned   dwValue32;
-    unsigned   dwKey2 = 0xEEEEEEEE;
-    unsigned    MPQ_HASH_KEY2_MIX = 0x400;
+void mpq_parser::DecryptMpqBlock(void *pvDataBlock, unsigned dwLength, unsigned dwKey1) {
+    unsigned *DataPointer = (unsigned int *) pvDataBlock;
+    unsigned dwValue32;
+    unsigned dwKey2 = 0xEEEEEEEE;
+    unsigned MPQ_HASH_KEY2_MIX = 0x400;
     // Round to DWORDs
-//    dwLength >>= 2;
+    dwLength >>= 2;
 //    dwKey2 += cryptTable[MPQ_HASH_KEY2_MIX + (dwKey1 & 0xFF)];
     // We need different approach on non-aligned buffers
-    if((((size_t)(DataPointer) & 0x03) == 0))
-    {
-        for(unsigned i = 0; i < dwLength; i++)
-        {
+    if ((((size_t) (DataPointer) & 0x03) == 0)) {
+        for (unsigned i = 0; i < dwLength; i++) {
             // Modify the second key
             dwKey2 += cryptTable[MPQ_HASH_KEY2_MIX + (dwKey1 & 0xFF)];
 //            unsigned encrypted =  DataPointer[i];
@@ -145,9 +147,7 @@ void  mpq_parser::DecryptMpqBlock(void * pvDataBlock, unsigned dwLength, unsigne
             dwKey1 = ((~dwKey1 << 0x15) + 0x11111111) | (dwKey1 >> 0x0B);
             dwKey2 = dwValue32 + dwKey2 + (dwKey2 << 5) + 3;
         }
-    }
-    else
-    {
+    } else {
         throw std::runtime_error("unsupported for now");
 //        for(long i = 0; i < dwLength; i++)
 //        {
@@ -162,16 +162,16 @@ void  mpq_parser::DecryptMpqBlock(void * pvDataBlock, unsigned dwLength, unsigne
 //        }
     }
 }
-void mpq_parser::DecryptBlock(void *block, int length, unsigned int key)
-{
-    unsigned int seed = 0xEEEEEEEE; unsigned int ch;
-    unsigned int *castBlock = (unsigned int *)block;
+
+void mpq_parser::DecryptBlock(void *block, int length, unsigned int key) {
+    unsigned int seed = 0xEEEEEEEE;
+    unsigned int ch;
+    unsigned int *castBlock = (unsigned int *) block;
 
     // Round to longs
 //    length >>= 2;
 
-    while(length-- > 0)
-    {
+    while (length-- > 0) {
         seed += cryptTable[0x400 + (key & 0xFF)];
         ch = *castBlock ^ (key + seed);
 
@@ -180,18 +180,17 @@ void mpq_parser::DecryptBlock(void *block, int length, unsigned int key)
         *castBlock++ = ch;
     }
 }
-void mpq_parser::DecryptData(void *lpbyBuffer, unsigned long dwLength, unsigned long dwKey)
-{
+
+void mpq_parser::DecryptData(void *lpbyBuffer, unsigned long dwLength, unsigned long dwKey) {
     assert(lpbyBuffer);
 
-    unsigned long *lpdwBuffer = (unsigned long *)lpbyBuffer;
+    unsigned long *lpdwBuffer = (unsigned long *) lpbyBuffer;
     unsigned long seed = 0xEEEEEEEEL;
     unsigned long ch;
 
     dwLength /= sizeof(unsigned long);
 
-    while(dwLength-- > 0)
-    {
+    while (dwLength-- > 0) {
         seed += cryptTable[0x400 + (dwKey & 0xFF)];
         ch = *lpdwBuffer ^ (dwKey + seed);
 
@@ -218,34 +217,29 @@ void mpq_parser::DecryptData(void *lpbyBuffer, unsigned long dwLength, unsigned 
 // various game versions and localizations. Even WorldEdit, after importing a file
 // with Korean characters in the name, cannot open the file back.
 //
-unsigned  mpq_parser::HashString(const char * szFileName, unsigned dwHashType)
-{
-    char* pbKey   = (char *)szFileName;
-    unsigned  dwSeed1 = 0x7FED7FED;
-    unsigned  dwSeed2 = 0xEEEEEEEE;
-    unsigned  ch;
+unsigned mpq_parser::HashString(const char *szFileName, unsigned dwHashType) {
+    char *pbKey = (char *) szFileName;
+    unsigned dwSeed1 = 0x7FED7FED;
+    unsigned dwSeed2 = 0xEEEEEEEE;
+    unsigned ch;
 
-    while(*pbKey != 0)
-    {
+    while (*pbKey != 0) {
         // Convert the input character to uppercase
         // Convert slash (0x2F) to backslash (0x5C)
         ch = AsciiToUpperTable[*pbKey++];
 
-        dwSeed1 =cryptTable[dwHashType + ch] ^ (dwSeed1 + dwSeed2);
+        dwSeed1 = cryptTable[dwHashType + ch] ^ (dwSeed1 + dwSeed2);
         dwSeed2 = ch + dwSeed1 + dwSeed2 + (dwSeed2 << 5) + 3;
     }
 
     return dwSeed1;
 }
 
-void mpq_parser::prepareCryptTable()
-{
+void mpq_parser::prepareCryptTable() {
     unsigned seed = 0x00100001, index1 = 0, index2 = 0, i;
 
-    for( index1 = 0; index1 < 0x100; index1++ )
-    {
-        for( index2 = index1, i = 0; i < 5; i++, index2 += 0x100 )
-        {
+    for (index1 = 0; index1 < 0x100; index1++) {
+        for (index2 = index1, i = 0; i < 5; i++, index2 += 0x100) {
             unsigned temp1, temp2;
 
             seed = (seed * 125 + 3) % 0x2AAAAB;
@@ -254,7 +248,7 @@ void mpq_parser::prepareCryptTable()
             seed = (seed * 125 + 3) % 0x2AAAAB;
             temp2 = (seed & 0xFFFF);
 
-            cryptTable[index2] = ( temp1 | temp2 );
+            cryptTable[index2] = (temp1 | temp2);
         }
     }
 }
@@ -266,6 +260,7 @@ void mpq_parser::parse_header() {
     std::this_thread::sleep_for(std::chrono::seconds(1));
     delete[] format;
 }
+
 //00h: int32 BlockOffset   Offset of the beginning of the block, relative to the beginning of the archive.
 //04h: int32 BlockSize     Size of the block in the archive.
 //08h: int32 FileSize      Size of the file data stored in the block. Only valid if the block is a file; otherwise
@@ -285,12 +280,12 @@ void mpq_parser::parse_header() {
 //00000200h        File is compressed. File cannot be imploded.
 //00000100h        File is imploded. File cannot be compressed.
 void mpq_parser::read_block(char *block, int i) {
-    unsigned * casted = (unsigned*) block;
-    unsigned block_offset =casted[0 + (4 * i)];
+    unsigned *casted = (unsigned *) block;
+    unsigned block_offset = casted[0 + (4 * i)];
     std::cout << "block offset for " << i << " block  is " << block_offset << std::endl;
-    unsigned compressed_file_size = casted[1+ (4 * i)];
+    unsigned compressed_file_size = casted[1 + (4 * i)];
     std::cout << "compressed_file_size " << i << " block  is " << compressed_file_size << std::endl;
-    unsigned file_size = casted[2+ (4 * i)];
+    unsigned file_size = casted[2 + (4 * i)];
     std::cout << "file_size for " << i << " block  is " << file_size << std::endl;
 //    unsigned block_offset = read_int_le(block+ (16 * i));
 //    std::cout << "block offset for " << i << " block  is " << block_offset << std::endl;
@@ -298,7 +293,7 @@ void mpq_parser::read_block(char *block, int i) {
 //    std::cout << "block size for " << i << " block  is " << block_size << std::endl;
 //    unsigned file_size = read_int_le(block + 8+ (16 * i));
 //    std::cout << "file size for " << i << " block  is " << file_size << std::endl;
-    unsigned file_flag =  casted[3+ (4 * i)];
+    unsigned file_flag = casted[3 + (4 * i)];
     if (file_flag & 0x80000000) {
         std::cout << "block " << i << " is file" << std::endl;
     }
@@ -318,13 +313,42 @@ void mpq_parser::read_block(char *block, int i) {
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
+block_table_entry mpq_parser::read_block_entry(char *data, int i) {
+    block_table_entry blockTableEntry;
+    unsigned *casted = (unsigned *) data;
+    blockTableEntry.file_pos = casted[0 + (4 * i)];
+    blockTableEntry.file_comp_size = casted[1 + (4 * i)];
+    blockTableEntry.file_size = casted[2 + (4 * i)];
+    unsigned file_flag = casted[3 + (4 * i)];
+    blockTableEntry.is_file_compress = file_flag & 0x00000200;
+    blockTableEntry.is_file_deleted = file_flag & 0x02000000;
+    blockTableEntry.is_file_encrypted = file_flag & 0x00010000;
+    blockTableEntry.is_file_exists = file_flag & 0x80000000;
+    blockTableEntry.is_file_implode = file_flag & 0x00000100;
+    blockTableEntry.is_file_patch = file_flag & 0x00100000;
+    blockTableEntry.is_file_single_unit = file_flag & 0x01000000;
+    blockTableEntry.is_file_start_crc_header = file_flag & 0x04000000;
+    blockTableEntry.is_file_need_fix_key = file_flag & 0x00020000;
+    return blockTableEntry;
+}
+
+hash_table_entry mpq_parser::read_hash_entry(char *data, int i) {
+    hash_table_entry hashTableEntry;
+    unsigned *casted = (unsigned *) data;
+    hashTableEntry.name1 = casted[0 + (4 * i)];
+    hashTableEntry.name2 = casted[1 + (4 * i)];
+    hashTableEntry.block_index = casted[3 + (4 * i)];
+    return hashTableEntry;
+}
+
+
 void mpq_parser::read_block(char *block, int i, std::string s) {
-    unsigned * casted = (unsigned*) block;
-    unsigned block_offset =casted[0 + (4 * i)];
+    unsigned *casted = (unsigned *) block;
+    unsigned block_offset = casted[0 + (4 * i)];
     std::cout << "block offset for " << s << " block  is " << block_offset << std::endl;
-    unsigned compressed_file_size = casted[1+ (4 * i)];
+    unsigned compressed_file_size = casted[1 + (4 * i)];
     std::cout << "compressed_file_size " << s << " block  is " << compressed_file_size << std::endl;
-    unsigned file_size = casted[2+ (4 * i)];
+    unsigned file_size = casted[2 + (4 * i)];
     std::cout << "file_size for " << i << " block  is " << file_size << std::endl;
 //    unsigned block_offset = read_int_le(block+ (16 * i));
 //    std::cout << "block offset for " << i << " block  is " << block_offset << std::endl;
@@ -332,27 +356,27 @@ void mpq_parser::read_block(char *block, int i, std::string s) {
 //    std::cout << "block size for " << i << " block  is " << block_size << std::endl;
 //    unsigned file_size = read_int_le(block + 8+ (16 * i));
 //    std::cout << "file size for " << i << " block  is " << file_size << std::endl;
-    unsigned file_flag =  casted[3+ (4 * i)];
+    unsigned file_flag = casted[3 + (4 * i)];
     if (file_flag & 0x80000000) {
-        std::cout << "block " << s<< " is file" << std::endl;
+        std::cout << "block " << s << " is file" << std::endl;
     }
     if (file_flag & 0x00000100) {
-        std::cout << "block " << s<< "  is compressed using PKWARE Data compression library" << std::endl;
+        std::cout << "block " << s << "  is compressed using PKWARE Data compression library" << std::endl;
     }
     if (file_flag & 0x00000200) {
-        std::cout << "block " << s<< "   is compressed using combination of compression methods" << std::endl;
+        std::cout << "block " << s << "   is compressed using combination of compression methods" << std::endl;
     }
     if (file_flag & 0x04000000) {
-        std::cout << "block " <<s<< " has checksum" << std::endl;
+        std::cout << "block " << s << " has checksum" << std::endl;
     }
     if (file_flag & 0x02000000) {
-        std::cout << "block " <<s << " has deleted" << std::endl;
+        std::cout << "block " << s << " has deleted" << std::endl;
     }
     if (file_flag & 0x01000000) {
         std::cout << "block " << s << " stored in single unit" << std::endl;
     }
     if (file_flag & 0x00020000) {
-        std::cout << "block " << s<< " stored in single unit" << std::endl;
+        std::cout << "block " << s << " stored in single unit" << std::endl;
     }
     if (file_flag & 0x04000000) {
         std::cout << "block " << s << " has crc in this" << std::endl;
@@ -362,10 +386,10 @@ void mpq_parser::read_block(char *block, int i, std::string s) {
 
 
 void mpq_parser::read_block_(char *block, int i) {
-    unsigned * casted = (unsigned*) block;
-        unsigned block_offset =casted[0];
+    unsigned *casted = (unsigned *) block;
+    unsigned block_offset = casted[0];
     std::cout << "block offset for " << i << " block  is " << block_offset << std::endl;
-        unsigned block_size = casted[1];
+    unsigned block_size = casted[1];
     std::cout << "block size for " << i << " block  is " << block_size << std::endl;
 //      block_offset = read_int_le(block  );
 //    std::cout << "block offset for " << i << " block  is " << block_offset << std::endl;
@@ -427,31 +451,30 @@ void mpq_parser::read_hash_entry(int i) {
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
-void mpq_parser::decompress_bzlib(char * in, char * out, unsigned av_in, unsigned av_out) {
+void mpq_parser::decompress_bzlib(char *in, char *out, unsigned av_in, unsigned av_out) {
     bz_stream strm;
     int nResult;
 
     // Initialize the BZIP2 decompression
-    strm.next_in   = in;
-    strm.avail_in  = av_in;
-    strm.next_out  = out;
+    strm.next_in = in;
+    strm.avail_in = av_in;
+    strm.next_out = out;
     strm.avail_out = av_out;
-    strm.bzalloc   = NULL;
-    strm.bzfree    = NULL;
-    strm.opaque    = NULL;
+    strm.bzalloc = NULL;
+    strm.bzfree = NULL;
+    strm.opaque = NULL;
 
     // Initialize decompression
-    if((nResult = BZ2_bzDecompressInit(&strm, 0, 0)) == BZ_OK)
-    {
+    if ((nResult = BZ2_bzDecompressInit(&strm, 0, 0)) == BZ_OK) {
         // Perform the decompression
         nResult = BZ2_bzDecompress(&strm);
 //        *pcbOutBuffer = strm.total_out_lo32;
         BZ2_bzDecompressEnd(&strm);
     }
-  if   (nResult >= BZ_OK) {
-      return;
-  }
-  throw std::runtime_error("coud nt decompress");
+    if (nResult >= BZ_OK) {
+        return;
+    }
+    throw std::runtime_error("coud nt decompress");
 }
 
 void mpq_parser::decompress_zlib(char *in, char *out, unsigned int av_in, unsigned int av_out) {
@@ -459,26 +482,83 @@ void mpq_parser::decompress_zlib(char *in, char *out, unsigned int av_in, unsign
     int nResult;
 
     // Fill the stream structure for zlib
-    z.next_in   = (Bytef *)in;
-    z.avail_in  = (uInt)av_in;
-    z.total_in  = av_in;
-    z.next_out  = (Bytef *)out;
+    z.next_in = (Bytef *) in;
+    z.avail_in = (uInt) av_in;
+    z.total_in = av_in;
+    z.next_out = (Bytef *) out;
     z.avail_out = av_out;
     z.total_out = 0;
-    z.zalloc    = NULL;
-    z.zfree     = NULL;
+    z.zalloc = NULL;
+    z.zfree = NULL;
 
     // Initialize the decompression structure. Storm.dll uses zlib version 1.1.3
-    if((nResult = inflateInit(&z)) == Z_OK)
-    {
+    if ((nResult = inflateInit(&z)) == Z_OK) {
         // Call zlib to decompress the data
         nResult = inflate(&z, Z_FINISH);
 //        *pcbOutBuffer = z.total_out;
         inflateEnd(&z);
     }
 
-    if   (nResult >= Z_OK) {
+    if (nResult >= Z_OK) {
         return;
     }
     throw std::runtime_error("coud nt decompress");
 }
+
+unsigned int mpq_parser::get_block_index(const char *file_name) {
+    unsigned dwName1 = HashString(file_name, MPQ_HASH_TYPE_A);
+    unsigned dwName2 = HashString(file_name, MPQ_HASH_TYPE_B);
+    int block_index = -1;
+    for (hash_table_entry hash: hash_table_entry_container) {
+        if (hash.name1 == dwName1 && hash.name2 == dwName2) {
+            return hash.block_index;
+        }
+    }
+    throw std::runtime_error("could not find file");
+}
+
+unsigned int mpq_parser::calculate_offset(const block_table_entry &entry) {
+    unsigned res = HEADER_SIZE;
+    res += entry.file_pos;
+//    if (entry.is_file_start_crc_header) {
+    res += 8;// todo offset before sector
+//    }
+    return res;
+}
+
+unsigned int mpq_parser::calculate_byte_to_read(const block_table_entry &entry) {
+    unsigned res = entry.is_file_compress ? entry.file_comp_size : entry.file_size;
+//    if (entry.is_file_start_crc_header) {
+    res -= 8;// ignore crc for now
+//    }
+    return res;
+}
+
+unsigned int mpq_parser::calculate_key(const char *str, const block_table_entry &entry) {
+    unsigned dwFileKey = HashString(str, MPQ_HASH_FILE_KEY);//758152009
+    dwFileKey = (dwFileKey + entry.file_pos) ^ entry.file_size;
+    return dwFileKey;
+}
+
+std::vector<std::string> mpq_parser::parse_list_file(std::string s) {
+    std::vector<std::string> res;
+    std::string delimiter = "\r\n";
+
+    size_t pos = 0;
+    std::string token;
+    while ((pos = s.find(delimiter)) != std::string::npos) {
+        token = s.substr(0, pos);
+        res.push_back(token);
+        s.erase(0, pos + delimiter.length());
+    }
+
+    return res;
+}
+
+abstract_map_file_parser *mpq_parser::get_parser(std::string s, block_table_entry& bp, std::ifstream& _map) {
+    if (s == "war3map.w3e" )
+            return new enviroment_file_map_parser(bp, _map);
+    return nullptr;
+}
+
+
