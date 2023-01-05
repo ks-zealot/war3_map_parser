@@ -13,6 +13,7 @@
 #include "util.h"
 #include "abstract_map_file_parser.h"
 #include "enviroment_file_map_parser.h"
+#include "../decompressors/abstract_decompressor.h"
 
 mpq_parser::mpq_parser(std::ifstream &map) : _map(map) {
 
@@ -105,7 +106,8 @@ void mpq_parser::parse() {
     DecryptMpqBlock(lf, byte_to_read, dwFileKey);
     char *lf_ = new char[list_file_entry.file_size];
     unsigned char compression = *lf++;
-    decompress_zlib(lf, lf_, list_file_entry.file_comp_size - 1, list_file_entry.file_size);
+    abstract_decompressor* decompressor = abstract_decompressor::get_decompressor(compression);
+    decompressor->decompress(lf, lf_, list_file_entry.file_comp_size - 1, list_file_entry.file_size);
     std::string res_files(lf_, list_file_entry.file_size);
     std::vector<std::string> detected_files = parse_list_file(res_files);
     for (std::string s: detected_files) {
@@ -116,12 +118,14 @@ void mpq_parser::parse() {
         if (parser) {
             std::cout << "for file " << s << " found parser" << std::endl;
             parser->parse();
+            delete parser;
         }
-        delete parser;
+
     }
     delete[] lf_;
     delete[] block;
     delete[] hashes;
+    delete decompressor;
 }
 
 void mpq_parser::DecryptMpqBlock(void *pvDataBlock, unsigned dwLength, unsigned dwKey1) {
@@ -451,59 +455,7 @@ void mpq_parser::read_hash_entry(int i) {
     std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
-void mpq_parser::decompress_bzlib(char *in, char *out, unsigned av_in, unsigned av_out) {
-    bz_stream strm;
-    int nResult;
 
-    // Initialize the BZIP2 decompression
-    strm.next_in = in;
-    strm.avail_in = av_in;
-    strm.next_out = out;
-    strm.avail_out = av_out;
-    strm.bzalloc = NULL;
-    strm.bzfree = NULL;
-    strm.opaque = NULL;
-
-    // Initialize decompression
-    if ((nResult = BZ2_bzDecompressInit(&strm, 0, 0)) == BZ_OK) {
-        // Perform the decompression
-        nResult = BZ2_bzDecompress(&strm);
-//        *pcbOutBuffer = strm.total_out_lo32;
-        BZ2_bzDecompressEnd(&strm);
-    }
-    if (nResult >= BZ_OK) {
-        return;
-    }
-    throw std::runtime_error("coud nt decompress");
-}
-
-void mpq_parser::decompress_zlib(char *in, char *out, unsigned int av_in, unsigned int av_out) {
-    z_stream z;                        // Stream information for zlib
-    int nResult;
-
-    // Fill the stream structure for zlib
-    z.next_in = (Bytef *) in;
-    z.avail_in = (uInt) av_in;
-    z.total_in = av_in;
-    z.next_out = (Bytef *) out;
-    z.avail_out = av_out;
-    z.total_out = 0;
-    z.zalloc = NULL;
-    z.zfree = NULL;
-
-    // Initialize the decompression structure. Storm.dll uses zlib version 1.1.3
-    if ((nResult = inflateInit(&z)) == Z_OK) {
-        // Call zlib to decompress the data
-        nResult = inflate(&z, Z_FINISH);
-//        *pcbOutBuffer = z.total_out;
-        inflateEnd(&z);
-    }
-
-    if (nResult >= Z_OK) {
-        return;
-    }
-    throw std::runtime_error("coud nt decompress");
-}
 
 unsigned int mpq_parser::get_block_index(const char *file_name) {
     unsigned dwName1 = HashString(file_name, MPQ_HASH_TYPE_A);

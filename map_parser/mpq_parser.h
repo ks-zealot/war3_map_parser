@@ -43,9 +43,7 @@ private:
 
     void read_block(char *data, int i, std::string filename);
 
-    void decompress_bzlib(char *in, char *out, unsigned av_in, unsigned av_out);//todo move to decompressor
-    void decompress_zlib(char *in, char *out, unsigned av_in, unsigned av_out);//todo move to decompressor
-    unsigned cryptTable[0x500];
+     unsigned cryptTable[0x500];
 
     unsigned long HashString(char *lpszFileName, unsigned long dwHashType);
 

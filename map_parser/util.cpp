@@ -21,8 +21,21 @@ uint16_t read_int_16_le(std::ifstream &map) {
     return sum;
 }
 
-unsigned read_int_le(char *bytes) {
+uint16_t read_int_16_le(unsigned char *data) {
+    uint16_t sum=0;
+    sum += data[0] | (data[1] << 8);
+    return sum;
+}
+
+
+unsigned read_int_le(unsigned char *bytes) {
     int sum = 0;
+    sum += bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24);
+    return sum;
+}
+
+float read_float_le(unsigned char *bytes) {
+    float sum = 0;
     sum += bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24);
     return sum;
 }

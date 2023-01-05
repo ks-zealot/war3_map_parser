@@ -3,3 +3,7 @@
 //
 
 #include "abstract_map_file_parser.h"
+
+abstract_map_file_parser::~abstract_map_file_parser() {
+
+}
