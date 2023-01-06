@@ -259,80 +259,148 @@ void enviroment_file_map_parser::write_mesh() {
     tinygltf::Accessor accessor2;
     tinygltf::Asset asset;
 
-    // This is the raw data buffer.
+    std::vector<uint16_t> indicies;
+    indicies.push_back(0);//(0, 2, 3)
+    indicies.push_back(2);
+    indicies.push_back(3);
+    indicies.push_back(3);//(3, 1, 0)
+    indicies.push_back(1);
+    indicies.push_back(0);
+    indicies.push_back(0); //(0, 1, 4)
+    indicies.push_back(1);
+    indicies.push_back(4);
+    indicies.push_back(4); //(4, 1, 5)
+    indicies.push_back(1);
+    indicies.push_back(5);
+    indicies.push_back(4); //(4, 5, 7)
+    indicies.push_back(5);
+    indicies.push_back(7);
+    indicies.push_back(7); //(7, 5, 6)
+    indicies.push_back(5);
+    indicies.push_back(6);
+    indicies.push_back(7); //(7, 6, 3)
+    indicies.push_back(6);
+    indicies.push_back(3);
+    indicies.push_back(3);//(3, 2, 7)
+    indicies.push_back(2);
+    indicies.push_back(7);
+    indicies.push_back(1); //(1, 3, 5)
+    indicies.push_back(3);
+    indicies.push_back(5);
+    indicies.push_back(0); //(0, 1, 3)
+    indicies.push_back(1);
+    indicies.push_back(3);
+    indicies.push_back(1);//(1, 3, 5)
+    indicies.push_back(3);
+    indicies.push_back(5);
+    indicies.push_back(0); //(0, 1, 3)
+    indicies.push_back(1);
+    indicies.push_back(3);
+
+    std::vector<Vertex> verticies;
+    verticies.push_back(Vertex(0, -1, 0));
+    verticies.push_back(Vertex(0, -1, 1));
+    verticies.push_back(Vertex(0, 1, 0));
+    verticies.push_back(Vertex(0, 1, 1));
+    verticies.push_back(Vertex(1, -1, 0));
+    verticies.push_back(Vertex(1, -1, 1));
+    verticies.push_back(Vertex(1, 1, 1));
+    verticies.push_back(Vertex(1, 1, 0));
+    std::vector<unsigned char> indicies_data;
+    for (uint16_t idx: indicies) {
+        unsigned char *chr = static_cast<unsigned char *>(static_cast<void *>(&idx));
+        char bytes[sizeof idx];
+        std::copy(chr,
+                  chr + sizeof idx,
+                  bytes);
+        for (int i = 0; i < sizeof idx; i++) {
+            indicies_data.push_back(bytes[i]);
+        }
+    }
+    std::vector<unsigned char> verticies_data;
+    for (Vertex &v: verticies) {
+        char bytes[sizeof(float) * 3];
+
+        unsigned char *chr1 = static_cast<unsigned char *>(static_cast<void *>(&v.x));
+        unsigned char *chr2 = static_cast<unsigned char *>(static_cast<void *>(&v.y));
+        unsigned char *chr3 = static_cast<unsigned char *>(static_cast<void *>(&v.z));
+        std::copy(chr1,
+                  chr1 + sizeof(float),
+                  bytes);
+        std::copy(chr2,
+                  chr2 + sizeof(float),
+                  bytes + sizeof(float));
+        std::copy(chr3,
+                  chr3 + sizeof(float),
+                  bytes + (sizeof(float)) * 2);
+        for (int i = 0; i < sizeof(float) * 3; i++) {
+            verticies_data.push_back(bytes[i]);
+        }
+    }
+    buffer.data.insert(buffer.data.end(), indicies_data.begin(), indicies_data.end());
+    buffer.data.insert(buffer.data.end(), verticies_data.begin(), verticies_data.end());
 //    buffer.data = {
-//            // 6 bytes of indices and two bytes of padding
-//            0x00,0x00, 0x01,0x00, 0x02,0x00, //(0, 1, 2)
-//            0x00,0x00,
-//            // 36 bytes of floating point numbers
-//            0x00,0x00,0x00,0x00,  0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, // 0, 0, 0
-//            0x00,0x00,0x80,0x3f,  0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, // 1, 0, 0
-//            0x00,0x00,0x00,0x00,  0x00,0x00,0x80,0x3f, 0x00,0x00,0x00,0x00 //  0, 1, 0
+//            // 72 bytes of indices
+//            0x00, 0x00, 0x02, 0x00, 0x03, 0x00, //(0, 2, 3)
+//            0x03, 0x00, 0x01, 0x00, 0x00, 0x00, //(3, 1, 0)
+//
+//            0x00, 0x00, 0x01, 0x00, 0x04, 0x00, //(0, 1, 4)
+//            0x04, 0x00, 0x01, 0x00, 0x05, 0x00, //(4, 1, 5)
+//
+//            0x04, 0x00, 0x05, 0x00, 0x07, 0x00, //(4, 5, 7)
+//            0x07, 0x00, 0x05, 0x00, 0x06, 0x00, //(7, 5, 6)
+//
+//            0x07, 0x00, 0x06, 0x00, 0x03, 0x00, //(7, 6, 3)
+//            0x03, 0x00, 0x02, 0x00, 0x07, 0x00, //(3, 2, 7)
+//
+//            0x01, 0x00, 0x03, 0x00, 0x05, 0x00, //(1, 3, 5)
+//            0x00, 0x00, 0x01, 0x00, 0x03, 0x00, //(0, 1, 3)
+//
+//            0x01, 0x00, 0x03, 0x00, 0x05, 0x00, //(1, 3, 5)
+//            0x00, 0x00, 0x01, 0x00, 0x03, 0x00, //(0, 1, 3)
+//            // 96 bytes of floating point numbers
+//// 0x00, 0x00, 0x80, 0xbf
+//            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x00, 0x00, // 0, -1, 0
+//            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x80, 0x3f, // 0, -1, 1
+//            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x3f, 0x00, 0x00, 0x00, 0x00, // 0, 1, 0
+//            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x3f, 0x00, 0x00, 0x80, 0x3f, // 0, 1, 1
+//            0x00, 0x00, 0x80, 0x3f, 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x00, 0x00, // 1, -1,0
+//            0x00, 0x00, 0x80, 0x3f, 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x80, 0x3f, // 1, -1,1
+//            0x00, 0x00, 0x80, 0x3f, 0x00, 0x00, 0x80, 0x3f, 0x00, 0x00, 0x80, 0x3f, // 1, 1,1
+//            0x00, 0x00, 0x80, 0x3f, 0x00, 0x00, 0x80, 0x3f, 0x00, 0x00, 0x00, 0x00, // 1, 1,0
 //    };
-//Back face of cube
-
-    buffer.data = {
-            // 72 bytes of indices
-            0x00, 0x00, 0x02, 0x00, 0x03, 0x00, //(0, 2, 3)
-            0x03, 0x00, 0x01, 0x00, 0x00, 0x00, //(3, 1, 0)
-
-            0x00, 0x00, 0x01, 0x00, 0x04, 0x00, //(0, 1, 4)
-            0x04, 0x00, 0x01, 0x00, 0x05, 0x00, //(4, 1, 5)
-
-            0x04, 0x00, 0x05, 0x00, 0x07, 0x00, //(4, 5, 7)
-            0x07, 0x00, 0x05, 0x00, 0x06, 0x00, //(7, 5, 6)
-
-            0x07, 0x00, 0x06, 0x00, 0x03, 0x00, //(7, 6, 3)
-            0x03, 0x00, 0x02, 0x00, 0x07, 0x00, //(3, 2, 7)
-
-            0x01, 0x00, 0x03, 0x00, 0x05, 0x00, //(1, 3, 5)
-            0x00, 0x00, 0x01, 0x00, 0x03, 0x00, //(0, 1, 3)
-
-            0x01, 0x00, 0x03, 0x00, 0x05, 0x00, //(1, 3, 5)
-            0x00, 0x00, 0x01, 0x00, 0x03, 0x00, //(0, 1, 3)
-            // 96 bytes of floating point numbers
-// 0x00, 0x00, 0x80, 0xbf
-            0x00, 0x00, 0x00, 0x00,   0x00, 0x00, 0x00, 0x0f,    0x00, 0x00, 0x00, 0x00, // 0, -1, 0
-            0x00, 0x00, 0x00, 0x00,   0x00, 0x00, 0x00, 0x0f,    0x00, 0x00, 0x80, 0x3f, // 0, -1, 1
-            0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x80, 0x3f,    0x00, 0x00, 0x00, 0x00, // 0, 1, 0
-            0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x80, 0x3f,    0x00, 0x00, 0x80, 0x3f, // 0, 1, 1
-            0x00, 0x00, 0x80, 0x3f,   0x00, 0x00, 0x00, 0x0f,    0x00, 0x00, 0x00, 0x00, // 1, -1,0
-            0x00, 0x00, 0x80, 0x3f,   0x00, 0x00, 0x00, 0x0f,    0x00, 0x00, 0x80, 0x3f, // 1, -1,1
-            0x00, 0x00, 0x80, 0x3f,    0x00, 0x00, 0x80, 0x3f,    0x00, 0x00, 0x80, 0x3f, // 1, 1,1
-            0x00, 0x00, 0x80, 0x3f,    0x00, 0x00, 0x80, 0x3f,    0x00, 0x00, 0x00, 0x00, // 1, 1,0
-    };
 
     // "The indices of the vertices (ELEMENT_ARRAY_BUFFER) take up 72 bytes in the
     // start of the buffer.
     bufferView1.buffer = 0;
     bufferView1.byteOffset = 0;
-    bufferView1.byteLength = 72;
+    bufferView1.byteLength = indicies_data.size();//72;
     bufferView1.target = TINYGLTF_TARGET_ELEMENT_ARRAY_BUFFER;
 
     // The vertices take up 96 bytes (8 vertices * 3 floating points * 4 bytes)
     // at position 40 in the buffer and are of type ARRAY_BUFFER
     bufferView2.buffer = 0;
-    bufferView2.byteOffset = 72;
-    bufferView2.byteLength = 96;
+    bufferView2.byteOffset = indicies_data.size();;
+    bufferView2.byteLength = verticies_data.size();
     bufferView2.target = TINYGLTF_TARGET_ARRAY_BUFFER;
 
     // Describe the layout of bufferView1, the indices of the vertices
     accessor1.bufferView = 0;
     accessor1.byteOffset = 0;
     accessor1.componentType = TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT;
-    accessor1.count = 36;
+    accessor1.count = indicies.size();//36;
     accessor1.type = TINYGLTF_TYPE_SCALAR;
-    accessor1.maxValues.push_back(7);
-    accessor1.minValues.push_back(0);
+//    accessor1.maxValues.push_back(7);
+//    accessor1.minValues.push_back(0);
 
     // Describe the layout of bufferView2, the vertices themself
     accessor2.bufferView = 1;
     accessor2.byteOffset = 0;
     accessor2.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
-    accessor2.count =8;
+    accessor2.count = verticies.size();//8;
     accessor2.type = TINYGLTF_TYPE_VEC3;
-    accessor2.maxValues = {1.0, 1.0, 1.0};
-    accessor2.minValues = {-1.0, -1.0, -1.0};
+//    accessor2.maxValues = {1.0, 1.0, 1.0};// todo чтобы вернуть, надо переопределить операторы больше меньше у вершины
+//    accessor2.minValues = {-1.0, -1.0, -1.0};
 
     // Build the mesh primitive and add it to the mesh
     primitive.indices = 0;                 // The index of the accessor for the vertex indices
