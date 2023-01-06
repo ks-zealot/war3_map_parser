@@ -40,6 +40,8 @@ private:
 
     void generate_mesh();
     void add_triangle(const unsigned& x1,const unsigned& x2,const unsigned& x3);
+
+    void write_mesh();
 };
 
 

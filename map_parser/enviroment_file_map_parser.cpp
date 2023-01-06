@@ -2,6 +2,13 @@
 // Created by zealot on 05.01.2023.
 //
 
+// Define these only in *one* .cc file.
+#define TINYGLTF_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+
+// #define TINYGLTF_NOEXCEPTION // optional. disable exception handling.
+#include "../tinygltf/tiny_gltf.h"
 #include <iostream>
 #include <vector>
 #include <cstring>
@@ -31,17 +38,19 @@ void enviroment_file_map_parser::parse() {
         _offset = *casted++;
     }
     unsigned sector_size = 4096;//todo remove hardcode
-    unpacked_data = new unsigned char[sector_size * offset_table.size()];
+    unpacked_data = new unsigned char[sector_size *
+                                      offset_table.size()];//todo выделять памяти сколько требуется, а не больше
     for (int i = 0; i < offset_table.size() - 1; i++) {
         read_block(offset_table, i);
     }
     aggregate();
     generate_mesh();
+    write_mesh();
 }
 
 void enviroment_file_map_parser::read_block(const std::vector<unsigned int> &offset_table, int i) {
     unsigned bytes_to_read = offset_table[i + 1] -
-                             offset_table[i]; //(relative to the begin of the file in the MPQ is stored at the begin of the file data
+                             offset_table[i]; //(relative to the beginning of the file in the MPQ is stored at the beginning of the file data
     _map.seekg(512 + bp.file_pos + offset_table[i]);
     char *data = new char[bytes_to_read];
     _map.read(data, bytes_to_read);
@@ -224,15 +233,146 @@ void enviroment_file_map_parser::generate_mesh() {
     add_triangle(0, last_vertex - x, last_vertex + 3);
 
     add_triangle(last_vertex + 2, 1, last_vertex);//right face
-    add_triangle(last_vertex + 2,last_vertex + 4, 1);
+    add_triangle(last_vertex + 2, last_vertex + 4, 1);
 
     add_triangle(last_vertex + 1, last_vertex + 2, last_vertex + 3);//bottom face
-    add_triangle(last_vertex + 2, last_vertex + 3,last_vertex + 4);
+    add_triangle(last_vertex + 2, last_vertex + 3, last_vertex + 4);
 }
 
 void enviroment_file_map_parser::add_triangle(const unsigned &x1, const unsigned &x2, const unsigned &x3) {
     indicies.push_back(x1);
     indicies.push_back(x2);
     indicies.push_back(x3);
+}
+
+void enviroment_file_map_parser::write_mesh() {
+// Create a model with a single mesh and save it as a gltf file
+    tinygltf::Model m;
+    tinygltf::Scene scene;
+    tinygltf::Mesh mesh;
+    tinygltf::Primitive primitive;
+    tinygltf::Node node;
+    tinygltf::Buffer buffer;
+    tinygltf::BufferView bufferView1;
+    tinygltf::BufferView bufferView2;
+    tinygltf::Accessor accessor1;
+    tinygltf::Accessor accessor2;
+    tinygltf::Asset asset;
+
+    // This is the raw data buffer.
+//    buffer.data = {
+//            // 6 bytes of indices and two bytes of padding
+//            0x00,0x00, 0x01,0x00, 0x02,0x00, //(0, 1, 2)
+//            0x00,0x00,
+//            // 36 bytes of floating point numbers
+//            0x00,0x00,0x00,0x00,  0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, // 0, 0, 0
+//            0x00,0x00,0x80,0x3f,  0x00,0x00,0x00,0x00, 0x00,0x00,0x00,0x00, // 1, 0, 0
+//            0x00,0x00,0x00,0x00,  0x00,0x00,0x80,0x3f, 0x00,0x00,0x00,0x00 //  0, 1, 0
+//    };
+//Back face of cube
+
+    buffer.data = {
+            // 72 bytes of indices
+            0x00, 0x00, 0x02, 0x00, 0x03, 0x00, //(0, 2, 3)
+            0x03, 0x00, 0x01, 0x00, 0x00, 0x00, //(3, 1, 0)
+
+            0x00, 0x00, 0x01, 0x00, 0x04, 0x00, //(0, 1, 4)
+            0x04, 0x00, 0x01, 0x00, 0x05, 0x00, //(4, 1, 5)
+
+            0x04, 0x00, 0x05, 0x00, 0x07, 0x00, //(4, 5, 7)
+            0x07, 0x00, 0x05, 0x00, 0x06, 0x00, //(7, 5, 6)
+
+            0x07, 0x00, 0x06, 0x00, 0x03, 0x00, //(7, 6, 3)
+            0x03, 0x00, 0x02, 0x00, 0x07, 0x00, //(3, 2, 7)
+
+            0x01, 0x00, 0x03, 0x00, 0x05, 0x00, //(1, 3, 5)
+            0x00, 0x00, 0x01, 0x00, 0x03, 0x00, //(0, 1, 3)
+
+            0x01, 0x00, 0x03, 0x00, 0x05, 0x00, //(1, 3, 5)
+            0x00, 0x00, 0x01, 0x00, 0x03, 0x00, //(0, 1, 3)
+            // 96 bytes of floating point numbers
+// 0x00, 0x00, 0x80, 0xbf
+            0x00, 0x00, 0x00, 0x00,   0x00, 0x00, 0x00, 0x0f,    0x00, 0x00, 0x00, 0x00, // 0, -1, 0
+            0x00, 0x00, 0x00, 0x00,   0x00, 0x00, 0x00, 0x0f,    0x00, 0x00, 0x80, 0x3f, // 0, -1, 1
+            0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x80, 0x3f,    0x00, 0x00, 0x00, 0x00, // 0, 1, 0
+            0x00, 0x00, 0x00, 0x00,    0x00, 0x00, 0x80, 0x3f,    0x00, 0x00, 0x80, 0x3f, // 0, 1, 1
+            0x00, 0x00, 0x80, 0x3f,   0x00, 0x00, 0x00, 0x0f,    0x00, 0x00, 0x00, 0x00, // 1, -1,0
+            0x00, 0x00, 0x80, 0x3f,   0x00, 0x00, 0x00, 0x0f,    0x00, 0x00, 0x80, 0x3f, // 1, -1,1
+            0x00, 0x00, 0x80, 0x3f,    0x00, 0x00, 0x80, 0x3f,    0x00, 0x00, 0x80, 0x3f, // 1, 1,1
+            0x00, 0x00, 0x80, 0x3f,    0x00, 0x00, 0x80, 0x3f,    0x00, 0x00, 0x00, 0x00, // 1, 1,0
+    };
+
+    // "The indices of the vertices (ELEMENT_ARRAY_BUFFER) take up 72 bytes in the
+    // start of the buffer.
+    bufferView1.buffer = 0;
+    bufferView1.byteOffset = 0;
+    bufferView1.byteLength = 72;
+    bufferView1.target = TINYGLTF_TARGET_ELEMENT_ARRAY_BUFFER;
+
+    // The vertices take up 96 bytes (8 vertices * 3 floating points * 4 bytes)
+    // at position 40 in the buffer and are of type ARRAY_BUFFER
+    bufferView2.buffer = 0;
+    bufferView2.byteOffset = 72;
+    bufferView2.byteLength = 96;
+    bufferView2.target = TINYGLTF_TARGET_ARRAY_BUFFER;
+
+    // Describe the layout of bufferView1, the indices of the vertices
+    accessor1.bufferView = 0;
+    accessor1.byteOffset = 0;
+    accessor1.componentType = TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT;
+    accessor1.count = 36;
+    accessor1.type = TINYGLTF_TYPE_SCALAR;
+    accessor1.maxValues.push_back(7);
+    accessor1.minValues.push_back(0);
+
+    // Describe the layout of bufferView2, the vertices themself
+    accessor2.bufferView = 1;
+    accessor2.byteOffset = 0;
+    accessor2.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
+    accessor2.count =8;
+    accessor2.type = TINYGLTF_TYPE_VEC3;
+    accessor2.maxValues = {1.0, 1.0, 1.0};
+    accessor2.minValues = {-1.0, -1.0, -1.0};
+
+    // Build the mesh primitive and add it to the mesh
+    primitive.indices = 0;                 // The index of the accessor for the vertex indices
+    primitive.attributes["POSITION"] = 1;  // The index of the accessor for positions
+    primitive.material = 0;
+    primitive.mode = TINYGLTF_MODE_TRIANGLES;
+    mesh.primitives.push_back(primitive);
+
+    // Other tie ups
+    node.mesh = 0;
+    scene.nodes.push_back(0); // Default scene
+
+    // Define the asset. The version is required
+    asset.version = "2.0";
+    asset.generator = "tinygltf";
+
+    // Now all that remains is to tie back all the loose objects into the
+    // our single model.
+    m.scenes.push_back(scene);
+    m.meshes.push_back(mesh);
+    m.nodes.push_back(node);
+    m.buffers.push_back(buffer);
+    m.bufferViews.push_back(bufferView1);
+    m.bufferViews.push_back(bufferView2);
+    m.accessors.push_back(accessor1);
+    m.accessors.push_back(accessor2);
+    m.asset = asset;
+
+    // Create a simple material
+    tinygltf::Material mat;
+    mat.pbrMetallicRoughness.baseColorFactor = {1.0f, 0.9f, 0.9f, 1.0f};
+    mat.doubleSided = true;
+    m.materials.push_back(mat);
+
+    // Save it to a file
+    tinygltf::TinyGLTF gltf;
+    gltf.WriteGltfSceneToFile(&m, "cube.gltf",
+                              true, // embedImages
+                              true, // embedBuffers
+                              true, // pretty print
+                              false); // write binary
 }
 
