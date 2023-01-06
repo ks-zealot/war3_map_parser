@@ -172,7 +172,7 @@ void enviroment_file_map_parser::generate_mesh() {
     unsigned minY = 0;
     unsigned maxX = x;
     unsigned maxY = y;
-    unsigned tile_size = 400;
+    unsigned tile_size = 1;//400;
     unsigned count = 0;
 
     /**
@@ -205,44 +205,49 @@ void enviroment_file_map_parser::generate_mesh() {
         for (int k = 0; k < y; k++) {
             tileset_entry &ts = tilesets[k + (i * x)];
 
-            verticies.push_back(Vertex(i * tile_size, k * tile_size, ts.height));
+            verticies.push_back(Vertex(i * tile_size, k * tile_size, ts.height / 100.f));
 
             if (i > minX && k > minY) {
-                add_triangle(count, count - 1, count - x - 1);//треугольник направленный налево вниз
+                add_triangle(count, count - 1, count - y - 1);//треугольник направленный налево вниз
 
             }
-            if (i <= maxX && k <= maxY) {
-                add_triangle(count, count + 1, count + x + 1);//треуголник направленный направо вверх
+            if (i < maxX - 1 && k < maxY - 1) {
+                add_triangle(count, count + 1, count + y + 1);//треуголник направленный направо вверх
             }
             count++;
         }
     }
-    verticies.push_back(Vertex(0, 0, 0)); //lb x * y + 1
-    verticies.push_back(Vertex(0, y * tile_size, 0));//rb x * y + 2
+    assert(verticies.size() == x * y);
+    verticies.push_back(Vertex(0, 0, 0)); //lb x * y
+    verticies.push_back(Vertex(0, y * tile_size, 0));//rb x * y + 1
     verticies.push_back(Vertex(x * tile_size, 0, 0));//lt x * y + 3
-    verticies.push_back(Vertex(x * tile_size, y * tile_size, 0));// rt x * y + 4
+    verticies.push_back(Vertex(x * tile_size, y * tile_size, 0));// rt x * y + 3
     unsigned last_vertex = x * y;
-    add_triangle(last_vertex + 1, 0, 1);
-    add_triangle(last_vertex + 1, last_vertex + 2, 1);//front face
+    assert(verticies.size() == x * y + 4);
+    add_triangle(last_vertex, 0, 1);
+    add_triangle(last_vertex, last_vertex + 1, 1);//front face
 
 
-    add_triangle(last_vertex + 3, last_vertex - x, last_vertex);//back face
-    add_triangle(last_vertex + 3, last_vertex + 4, last_vertex);
+    add_triangle(last_vertex + 2, last_vertex - x, last_vertex);//back face
+    add_triangle(last_vertex + 2, last_vertex + 3, last_vertex);
+//
+    add_triangle(last_vertex + 1, 0, last_vertex + 2);//left face
+    add_triangle(0, last_vertex - x, last_vertex + 2);
 
-    add_triangle(last_vertex + 1, 0, last_vertex + 3);//left face
-    add_triangle(0, last_vertex - x, last_vertex + 3);
+    add_triangle(last_vertex, 1, last_vertex + 3);//right face
+    add_triangle(last_vertex - x, last_vertex + 3, 1);
 
-    add_triangle(last_vertex + 2, 1, last_vertex);//right face
-    add_triangle(last_vertex + 2, last_vertex + 4, 1);
-
-    add_triangle(last_vertex + 1, last_vertex + 2, last_vertex + 3);//bottom face
-    add_triangle(last_vertex + 2, last_vertex + 3, last_vertex + 4);
+    add_triangle(last_vertex, last_vertex + 1, last_vertex + 2);//bottom face
+    add_triangle(last_vertex + 1, last_vertex + 2, last_vertex + 3);
 }
 
 void enviroment_file_map_parser::add_triangle(const unsigned &x1, const unsigned &x2, const unsigned &x3) {
     indicies.push_back(x1);
     indicies.push_back(x2);
     indicies.push_back(x3);
+    if (x1 > x * y + 4 || x2 > x * y + 4 || x3 > x * y + 4) {
+        throw std::runtime_error("invalid index");
+    }
 }
 
 void enviroment_file_map_parser::write_mesh() {
@@ -258,56 +263,62 @@ void enviroment_file_map_parser::write_mesh() {
     tinygltf::Accessor accessor1;
     tinygltf::Accessor accessor2;
     tinygltf::Asset asset;
-
-    std::vector<uint16_t> indicies;
-    indicies.push_back(0);//(0, 2, 3)
-    indicies.push_back(2);
-    indicies.push_back(3);
-    indicies.push_back(3);//(3, 1, 0)
-    indicies.push_back(1);
-    indicies.push_back(0);
-    indicies.push_back(0); //(0, 1, 4)
-    indicies.push_back(1);
-    indicies.push_back(4);
-    indicies.push_back(4); //(4, 1, 5)
-    indicies.push_back(1);
-    indicies.push_back(5);
-    indicies.push_back(4); //(4, 5, 7)
-    indicies.push_back(5);
-    indicies.push_back(7);
-    indicies.push_back(7); //(7, 5, 6)
-    indicies.push_back(5);
-    indicies.push_back(6);
-    indicies.push_back(7); //(7, 6, 3)
-    indicies.push_back(6);
-    indicies.push_back(3);
-    indicies.push_back(3);//(3, 2, 7)
-    indicies.push_back(2);
-    indicies.push_back(7);
-    indicies.push_back(1); //(1, 3, 5)
-    indicies.push_back(3);
-    indicies.push_back(5);
-    indicies.push_back(0); //(0, 1, 3)
-    indicies.push_back(1);
-    indicies.push_back(3);
-    indicies.push_back(1);//(1, 3, 5)
-    indicies.push_back(3);
-    indicies.push_back(5);
-    indicies.push_back(0); //(0, 1, 3)
-    indicies.push_back(1);
-    indicies.push_back(3);
-
-    std::vector<Vertex> verticies;
-    verticies.push_back(Vertex(0, -1, 0));
-    verticies.push_back(Vertex(0, -1, 1));
-    verticies.push_back(Vertex(0, 1, 0));
-    verticies.push_back(Vertex(0, 1, 1));
-    verticies.push_back(Vertex(1, -1, 0));
-    verticies.push_back(Vertex(1, -1, 1));
-    verticies.push_back(Vertex(1, 1, 1));
-    verticies.push_back(Vertex(1, 1, 0));
+//
+//    std::vector<unsigned > indicies;
+//    indicies.push_back(0);//(0, 2, 3)
+//    indicies.push_back(2);
+//    indicies.push_back(3);
+//    indicies.push_back(3);//(3, 1, 0)
+//    indicies.push_back(1);
+//    indicies.push_back(0);
+//    indicies.push_back(0); //(0, 1, 4)
+//    indicies.push_back(1);
+//    indicies.push_back(4);
+//    indicies.push_back(4); //(4, 1, 5)
+//    indicies.push_back(1);
+//    indicies.push_back(5);
+//    indicies.push_back(4); //(4, 5, 7)
+//    indicies.push_back(5);
+//    indicies.push_back(7);
+//    indicies.push_back(7); //(7, 5, 6)
+//    indicies.push_back(5);
+//    indicies.push_back(6);
+//    indicies.push_back(7); //(7, 6, 3)
+//    indicies.push_back(6);
+//    indicies.push_back(3);
+//    indicies.push_back(3);//(3, 2, 7)
+//    indicies.push_back(2);
+//    indicies.push_back(7);
+//    indicies.push_back(1); //(1, 3, 5)
+//    indicies.push_back(3);
+//    indicies.push_back(5);
+//    indicies.push_back(0); //(0, 1, 3)
+//    indicies.push_back(1);
+//    indicies.push_back(3);
+//    indicies.push_back(1);//(1, 3, 5)
+//    indicies.push_back(3);
+//    indicies.push_back(5);
+//    indicies.push_back(0); //(0, 1, 3)
+//    indicies.push_back(1);
+//    indicies.push_back(3);
+//
+//    std::vector<Vertex> verticies;
+//    verticies.push_back(Vertex(0, -1, 0));
+//    verticies.push_back(Vertex(0, -1, 1));
+//    verticies.push_back(Vertex(0, 1, 0));
+//    verticies.push_back(Vertex(0, 1, 1));
+//    verticies.push_back(Vertex(1, -1, 0));
+//    verticies.push_back(Vertex(1, -1, 1));
+//    verticies.push_back(Vertex(1, 1, 1));
+//    verticies.push_back(Vertex(1, 1, 0));
     std::vector<unsigned char> indicies_data;
-    for (uint16_t idx: indicies) {
+    for (unsigned &idx: indicies) {
+        if (idx > x * y + 4) {
+            throw std::runtime_error("invalid index");
+        }
+        if (idx > verticies.size()) {
+            throw std::runtime_error("invalid index");
+        }
         unsigned char *chr = static_cast<unsigned char *>(static_cast<void *>(&idx));
         char bytes[sizeof idx];
         std::copy(chr,
@@ -387,7 +398,7 @@ void enviroment_file_map_parser::write_mesh() {
     // Describe the layout of bufferView1, the indices of the vertices
     accessor1.bufferView = 0;
     accessor1.byteOffset = 0;
-    accessor1.componentType = TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT;
+    accessor1.componentType = TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT;// TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT;
     accessor1.count = indicies.size();//36;
     accessor1.type = TINYGLTF_TYPE_SCALAR;
 //    accessor1.maxValues.push_back(7);
@@ -437,7 +448,7 @@ void enviroment_file_map_parser::write_mesh() {
 
     // Save it to a file
     tinygltf::TinyGLTF gltf;
-    gltf.WriteGltfSceneToFile(&m, "cube.gltf",
+    gltf.WriteGltfSceneToFile(&m, "map.gltf", //todo remove hardcode
                               true, // embedImages
                               true, // embedBuffers
                               true, // pretty print
