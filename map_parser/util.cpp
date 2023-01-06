@@ -27,6 +27,13 @@ uint16_t read_int_16_le(unsigned char *data) {
     return sum;
 }
 
+int16_t read_sint_16_le(unsigned char *data) {
+    int16_t sum=0;
+    sum += data[0] | (data[1] << 8);
+    return sum;
+}
+
+
 
 unsigned read_int_le(unsigned char *bytes) {
     int sum = 0;

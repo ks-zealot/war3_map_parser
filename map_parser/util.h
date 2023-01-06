@@ -12,6 +12,7 @@ unsigned read_int_le( unsigned char* data) ;
 float read_float_le( unsigned char* data) ;
 uint16_t read_int_16_le(std::ifstream& map) ;
 uint16_t read_int_16_le( unsigned char* data) ;
+int16_t read_sint_16_le( unsigned char* data) ;
 // Swaps a signed 16-bit integer
 int16_t SwapInt16(uint16_t val);
 

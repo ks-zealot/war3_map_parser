@@ -8,6 +8,7 @@
 
 #include "abstract_map_file_parser.h"
 #include "../data_objects/war3_inner_object/tileset_entry.h"
+#include "../data_objects/parser_inner_object/Vertex.h"
 
 class enviroment_file_map_parser : public abstract_map_file_parser{
 public:
@@ -22,6 +23,8 @@ public:
 private:
     unsigned char* unpacked_data;
     std::vector<tileset_entry> tilesets;
+    std::vector<Vertex> verticies;
+    std::vector<unsigned> indicies;
 
     unsigned char main_tileset;
     unsigned int custom_tilesets_flag;
@@ -34,6 +37,9 @@ private:
     unsigned int a;
     unsigned int b;
     unsigned long size;
+
+    void generate_mesh();
+    void add_triangle(const unsigned& x1,const unsigned& x2,const unsigned& x3);
 };
 
 

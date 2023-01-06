@@ -17,8 +17,8 @@
 class tileset_entry {
     friend class enviroment_file_map_parser;
 public://todo its for test purpose, remove
-    uint16_t height;
-    uint16_t water_level;
+    int16_t height;
+    int16_t water_level;
     uint16_t texture_type;
 
     unsigned char texture_details;
