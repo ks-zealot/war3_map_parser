@@ -205,7 +205,7 @@ void enviroment_file_map_parser::generate_mesh() {
         for (int k = 0; k < y; k++) {
             tileset_entry &ts = tilesets[k + (i * x)];
 
-            verticies.push_back(Vertex(i * tile_size, k * tile_size, ts.height / 100.f));
+            verticies.push_back(Vertex(i * tile_size, k * tile_size, ts.height / 1000.f));
 
             if (i > minX && k > minY) {
                 add_triangle(count, count - 1, count - y - 1);//треугольник направленный налево вниз
@@ -220,23 +220,22 @@ void enviroment_file_map_parser::generate_mesh() {
     assert(verticies.size() == x * y);
     verticies.push_back(Vertex(0, 0, 0)); //lb x * y
     verticies.push_back(Vertex(0, y * tile_size, 0));//rb x * y + 1
-    verticies.push_back(Vertex(x * tile_size, 0, 0));//lt x * y + 3
+    verticies.push_back(Vertex(x * tile_size, 0, 0));//lt x * y + 2
     verticies.push_back(Vertex(x * tile_size, y * tile_size, 0));// rt x * y + 3
     unsigned last_vertex = x * y;
     assert(verticies.size() == x * y + 4);
     add_triangle(last_vertex, 0, 1);
     add_triangle(last_vertex, last_vertex + 1, 1);//front face
 
+    add_triangle(last_vertex + 2, last_vertex - 2, last_vertex-1);//back face
+    add_triangle(last_vertex + 2, last_vertex + 3, last_vertex -1);
 
-    add_triangle(last_vertex + 2, last_vertex - x, last_vertex);//back face
-    add_triangle(last_vertex + 2, last_vertex + 3, last_vertex);
+    add_triangle(last_vertex , 0, last_vertex + 2);//left face
+    add_triangle(0, last_vertex - 2, last_vertex + 2);
 //
-    add_triangle(last_vertex + 1, 0, last_vertex + 2);//left face
-    add_triangle(0, last_vertex - x, last_vertex + 2);
-
-    add_triangle(last_vertex, 1, last_vertex + 3);//right face
-    add_triangle(last_vertex - x, last_vertex + 3, 1);
-
+    add_triangle(last_vertex+1, 1, last_vertex + 3);//right face
+    add_triangle(last_vertex - 1, last_vertex + 3, 1);
+//
     add_triangle(last_vertex, last_vertex + 1, last_vertex + 2);//bottom face
     add_triangle(last_vertex + 1, last_vertex + 2, last_vertex + 3);
 }
@@ -263,54 +262,7 @@ void enviroment_file_map_parser::write_mesh() {
     tinygltf::Accessor accessor1;
     tinygltf::Accessor accessor2;
     tinygltf::Asset asset;
-//
-//    std::vector<unsigned > indicies;
-//    indicies.push_back(0);//(0, 2, 3)
-//    indicies.push_back(2);
-//    indicies.push_back(3);
-//    indicies.push_back(3);//(3, 1, 0)
-//    indicies.push_back(1);
-//    indicies.push_back(0);
-//    indicies.push_back(0); //(0, 1, 4)
-//    indicies.push_back(1);
-//    indicies.push_back(4);
-//    indicies.push_back(4); //(4, 1, 5)
-//    indicies.push_back(1);
-//    indicies.push_back(5);
-//    indicies.push_back(4); //(4, 5, 7)
-//    indicies.push_back(5);
-//    indicies.push_back(7);
-//    indicies.push_back(7); //(7, 5, 6)
-//    indicies.push_back(5);
-//    indicies.push_back(6);
-//    indicies.push_back(7); //(7, 6, 3)
-//    indicies.push_back(6);
-//    indicies.push_back(3);
-//    indicies.push_back(3);//(3, 2, 7)
-//    indicies.push_back(2);
-//    indicies.push_back(7);
-//    indicies.push_back(1); //(1, 3, 5)
-//    indicies.push_back(3);
-//    indicies.push_back(5);
-//    indicies.push_back(0); //(0, 1, 3)
-//    indicies.push_back(1);
-//    indicies.push_back(3);
-//    indicies.push_back(1);//(1, 3, 5)
-//    indicies.push_back(3);
-//    indicies.push_back(5);
-//    indicies.push_back(0); //(0, 1, 3)
-//    indicies.push_back(1);
-//    indicies.push_back(3);
-//
-//    std::vector<Vertex> verticies;
-//    verticies.push_back(Vertex(0, -1, 0));
-//    verticies.push_back(Vertex(0, -1, 1));
-//    verticies.push_back(Vertex(0, 1, 0));
-//    verticies.push_back(Vertex(0, 1, 1));
-//    verticies.push_back(Vertex(1, -1, 0));
-//    verticies.push_back(Vertex(1, -1, 1));
-//    verticies.push_back(Vertex(1, 1, 1));
-//    verticies.push_back(Vertex(1, 1, 0));
+
     std::vector<unsigned char> indicies_data;
     for (unsigned &idx: indicies) {
         if (idx > x * y + 4) {
@@ -350,36 +302,7 @@ void enviroment_file_map_parser::write_mesh() {
     }
     buffer.data.insert(buffer.data.end(), indicies_data.begin(), indicies_data.end());
     buffer.data.insert(buffer.data.end(), verticies_data.begin(), verticies_data.end());
-//    buffer.data = {
-//            // 72 bytes of indices
-//            0x00, 0x00, 0x02, 0x00, 0x03, 0x00, //(0, 2, 3)
-//            0x03, 0x00, 0x01, 0x00, 0x00, 0x00, //(3, 1, 0)
-//
-//            0x00, 0x00, 0x01, 0x00, 0x04, 0x00, //(0, 1, 4)
-//            0x04, 0x00, 0x01, 0x00, 0x05, 0x00, //(4, 1, 5)
-//
-//            0x04, 0x00, 0x05, 0x00, 0x07, 0x00, //(4, 5, 7)
-//            0x07, 0x00, 0x05, 0x00, 0x06, 0x00, //(7, 5, 6)
-//
-//            0x07, 0x00, 0x06, 0x00, 0x03, 0x00, //(7, 6, 3)
-//            0x03, 0x00, 0x02, 0x00, 0x07, 0x00, //(3, 2, 7)
-//
-//            0x01, 0x00, 0x03, 0x00, 0x05, 0x00, //(1, 3, 5)
-//            0x00, 0x00, 0x01, 0x00, 0x03, 0x00, //(0, 1, 3)
-//
-//            0x01, 0x00, 0x03, 0x00, 0x05, 0x00, //(1, 3, 5)
-//            0x00, 0x00, 0x01, 0x00, 0x03, 0x00, //(0, 1, 3)
-//            // 96 bytes of floating point numbers
-//// 0x00, 0x00, 0x80, 0xbf
-//            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x00, 0x00, // 0, -1, 0
-//            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x80, 0x3f, // 0, -1, 1
-//            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x3f, 0x00, 0x00, 0x00, 0x00, // 0, 1, 0
-//            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x3f, 0x00, 0x00, 0x80, 0x3f, // 0, 1, 1
-//            0x00, 0x00, 0x80, 0x3f, 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x00, 0x00, // 1, -1,0
-//            0x00, 0x00, 0x80, 0x3f, 0x00, 0x00, 0x00, 0x0f, 0x00, 0x00, 0x80, 0x3f, // 1, -1,1
-//            0x00, 0x00, 0x80, 0x3f, 0x00, 0x00, 0x80, 0x3f, 0x00, 0x00, 0x80, 0x3f, // 1, 1,1
-//            0x00, 0x00, 0x80, 0x3f, 0x00, 0x00, 0x80, 0x3f, 0x00, 0x00, 0x00, 0x00, // 1, 1,0
-//    };
+
 
     // "The indices of the vertices (ELEMENT_ARRAY_BUFFER) take up 72 bytes in the
     // start of the buffer.
