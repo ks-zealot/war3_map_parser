@@ -13,12 +13,14 @@
 #include <vector>
 #include <cstring>
 #include <cassert>
+
 #include "enviroment_file_map_parser.h"
 #include "../decompressors/abstract_decompressor.h"
 #include "util.h"
 #include "../data_objects/war3_inner_object/tileset_entry.h"
 
 void enviroment_file_map_parser::parse() {
+    parser.parse();
     unsigned bytes_to_read = bp.is_file_compress ? bp.file_comp_size : bp.file_size;
 
     char *data = new char[bytes_to_read];
@@ -98,6 +100,9 @@ void enviroment_file_map_parser::aggregate() {
     for (int i = 0; i < a; i++) {
         tileset_table[i] = new char[4];
         memcpy(tileset_table[i], unpacked_data, 4);
+        std::string id(tileset_table[i], 4);
+        tileset_textures[id] = png::image<png::rgb_pixel>(
+                "/home/zealot/CLionProjects/War3_Map_Parser/assets/" + parser.texture_name(id));
         unpacked_data += 4;
         count += 4;
     }
@@ -116,6 +121,7 @@ void enviroment_file_map_parser::aggregate() {
     count += 4;
     y = read_int_le(unpacked_data);
     unpacked_data += 4;
+    result_texture = png::image<png::rgb_pixel>( x * 64 ,y * 64);
     count += 4;
     center_offset_x = read_float_le(unpacked_data);
     unpacked_data += 4;
@@ -124,6 +130,8 @@ void enviroment_file_map_parser::aggregate() {
     unpacked_data += 4;
     count += 4;
     tilesets = std::vector<tileset_entry>(x * y);
+
+    png::image<png::rgb_pixel> texture(x * 64, y * 64);
     for (int i = 0; i < x * y; i++) {
         tileset_entry entry;
         entry.height = read_sint_16_le(unpacked_data);
@@ -132,7 +140,7 @@ void enviroment_file_map_parser::aggregate() {
         int16_t data = read_int_16_le(unpacked_data);
         unpacked_data += 2;
         count += 2;
-        entry.water_level = 0x6200 & 0x3FFF;
+        entry.water_level = 0x6200 & 0x3FFF;//todo ??
         entry.is_boundary = data & 0xC000;
         unsigned char next = *unpacked_data++;
         count++;
@@ -143,7 +151,14 @@ void enviroment_file_map_parser::aggregate() {
         entry.is_water = high & 0x0040;
         entry.is_undead = high & 0x0020;
         entry.texture_type = low; // ref to tileset table
+        std::string s(tileset_table[low], 4);
+        if (low > a) {
+            throw std::runtime_error("invalid texture");
+        }
+
+//        std::cout << "texture name " << parser.texture_name(s) <<std::endl;
         entry.texture_details = *unpacked_data++;
+        entry.texture_details = entry.texture_details & 0x1f;
         count++;
         unsigned char next_ = *unpacked_data++;
         count++;
@@ -201,9 +216,30 @@ void enviroment_file_map_parser::generate_mesh() {
      * x + 1 ,(x * Y ) + 3 , (x * Y ) + 2
      * (x * Y ) + 3, (x * Y ) + 2, x// правая грань
      */
+
     for (int i = 0; i < x; i++) {
         for (int k = 0; k < y; k++) {
-            tileset_entry &ts = tilesets[k + (i * x)];
+            tileset_entry &ts = tilesets[i + (k * x)];
+            std::string s(tileset_table[ts.texture_type], 4);
+            png::image<png::rgb_pixel> &current_texture = tileset_textures[s];
+            int pos = ts.texture_details;
+            int y_shift = pos / 8;
+            int x_shift = pos % 8;
+//            std::cout << "pos " << pos << " x_Shift " << x_shift << " y_shift " << y_shift << std::endl;
+            for (int _x = x_shift * 64, __x = 0; _x < x_shift * 64 + 64; ++_x, ++__x) {
+                for (int _y = y_shift * 64, __y = 0; _y < y_shift * 64 + 64; ++_y, ++__y) {
+
+                    png::rgb_pixel pxl = current_texture.get_pixel(_x, _y);
+                    result_texture.set_pixel(__x + (i * 64), __y + (k * 64), pxl);
+                    // non-checking equivalent of image.set_pixel(x, y, ...);
+                }
+            }
+        }
+    }
+    result_texture.write("output.png");
+    for (int i = 0; i < x; i++) {
+        for (int k = 0; k < y; k++) {
+            tileset_entry &ts = tilesets[k + (i * x)];//todo
 
             verticies.push_back(Vertex(i * tile_size, k * tile_size, ts.height / 1000.f));
 
@@ -227,13 +263,13 @@ void enviroment_file_map_parser::generate_mesh() {
     add_triangle(last_vertex, 0, 1);
     add_triangle(last_vertex, last_vertex + 1, 1);//front face
 
-    add_triangle(last_vertex + 2, last_vertex - 2, last_vertex-1);//back face
-    add_triangle(last_vertex + 2, last_vertex + 3, last_vertex -1);
+    add_triangle(last_vertex + 2, last_vertex - 2, last_vertex - 1);//back face
+    add_triangle(last_vertex + 2, last_vertex + 3, last_vertex - 1);
 
-    add_triangle(last_vertex , 0, last_vertex + 2);//left face
+    add_triangle(last_vertex, 0, last_vertex + 2);//left face
     add_triangle(0, last_vertex - 2, last_vertex + 2);
 //
-    add_triangle(last_vertex+1, 1, last_vertex + 3);//right face
+    add_triangle(last_vertex + 1, 1, last_vertex + 3);//right face
     add_triangle(last_vertex - 1, last_vertex + 3, 1);
 //
     add_triangle(last_vertex, last_vertex + 1, last_vertex + 2);//bottom face

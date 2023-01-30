@@ -41,29 +41,21 @@ void mpq_parser::parse() {
     parse_header();
     int header_size = read_int_le(_map);
     std::cout << "header size " << header_size << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
     int archive_size = read_int_le(_map);
     std::cout << "archive size " << archive_size << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
     int16_t format_version = read_int_16_le(_map);
     std::cout << "format version " << format_version << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
     int16_t shift = read_int_16_le(_map);
     unsigned sector_size = 0x200 << shift;
     std::cout << "SectorSizeShift " << shift << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
     int hash_table_offset = read_int_le(_map);
     std::cout << "hash table offset " << hash_table_offset << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
     int block_table_offset = read_int_le(_map);
     std::cout << "block table offset " << block_table_offset << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
     int hash_table_entries = read_int_le(_map);
     std::cout << "hash table entries " << hash_table_entries << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
     int block_table_entries = read_int_le(_map);
     std::cout << "block table entries " << block_table_entries << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
     block_table_entries_container = std::vector<block_table_entry>(block_table_entries);
     hash_table_entry_container = std::vector<hash_table_entry>(hash_table_entries);
     _map.seekg(HEADER_SIZE + block_table_offset, std::ios_base::beg);
@@ -261,7 +253,6 @@ void mpq_parser::parse_header() {
     char *format = new char[4];
     _map.read(format, 4);
     std::cout << "header is  " << std::string(format, 4) << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
     delete[] format;
 }
 
@@ -314,7 +305,6 @@ void mpq_parser::read_block(char *block, int i) {
         std::cout << "block " << i << " stored in single unit" << std::endl;
     }
 
-    std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
 block_table_entry mpq_parser::read_block_entry(char *data, int i) {
@@ -385,7 +375,6 @@ void mpq_parser::read_block(char *block, int i, std::string s) {
     if (file_flag & 0x04000000) {
         std::cout << "block " << s << " has crc in this" << std::endl;
     }
-    std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
 
@@ -417,7 +406,6 @@ void mpq_parser::read_block_(char *block, int i) {
 //    if (file_flag & 0x00020000) {
 //        std::cout << "block " << i << " stored in single unit" << std::endl;
 //    }
-    std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 // The hash of the full file name (part A)
 //DWORD dwName1;
@@ -452,7 +440,6 @@ void mpq_parser::read_hash_entry(int i) {
     _map.get();
     unsigned file_block_index = read_int_le(_map);
     std::cout << "file_block_index  " << i << " block  is " << file_block_index << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
 

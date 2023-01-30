@@ -10,7 +10,6 @@ int main() {
         return -1;
     }
     std::cout << "Open war 3 map (2)EchoIsles.w3m..." << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
     std::cout << "Parse header" << std::endl;
     map_parser parser(map);
     parser.parse();

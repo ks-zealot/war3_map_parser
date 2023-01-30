@@ -5,31 +5,40 @@
 #ifndef WAR3_MAP_PARSER_ENVIROMENT_FILE_MAP_PARSER_H
 #define WAR3_MAP_PARSER_ENVIROMENT_FILE_MAP_PARSER_H
 
-
+#include <image.hpp>
 #include "abstract_map_file_parser.h"
 #include "../data_objects/war3_inner_object/tileset_entry.h"
 #include "../data_objects/parser_inner_object/Vertex.h"
+#include "../file_utils/csv_parser.h"
 
-class enviroment_file_map_parser : public abstract_map_file_parser{
+class enviroment_file_map_parser : public abstract_map_file_parser {
 public:
     virtual ~enviroment_file_map_parser();
-    enviroment_file_map_parser(block_table_entry &entry, std::ifstream &fstream) : abstract_map_file_parser(entry, fstream) {};
+
+    enviroment_file_map_parser(block_table_entry &entry, std::ifstream &fstream) : abstract_map_file_parser(entry,
+                                                                                                            fstream),
+                                                                                   parser("/home/zealot/CLionProjects/War3_Map_Parser/assets/TerrainArt/Terrain.csv") {};
 
     void parse() override;
 
     void aggregate() override;
 
     void read_block(const std::vector<unsigned int> &offset_table, int i);
+
 private:
-    unsigned char* unpacked_data;
+    unsigned char *unpacked_data;
     std::vector<tileset_entry> tilesets;
     std::vector<Vertex> verticies;
     std::vector<unsigned> indicies;
 
+    csv_parser parser;
+
     unsigned char main_tileset;
     unsigned int custom_tilesets_flag;
-    char** tileset_table;
-    char** cliff_tileset_table;
+    char **tileset_table;
+    std::unordered_map<std::string, png::image<png::rgb_pixel >> tileset_textures;
+    png::image<png::rgb_pixel > result_texture;
+    char **cliff_tileset_table;
     unsigned int x;
     unsigned int y;
     float center_offset_x;
@@ -39,7 +48,8 @@ private:
     unsigned long size;
 
     void generate_mesh();
-    void add_triangle(const unsigned& x1,const unsigned& x2,const unsigned& x3);
+
+    void add_triangle(const unsigned &x1, const unsigned &x2, const unsigned &x3);
 
     void write_mesh();
 };

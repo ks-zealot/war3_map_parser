@@ -41,14 +41,12 @@ void header_parser::parse() {
     read_flags();
     read_number_of_player();
     std::cout << "skip header... " << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
     _map.seekg(512);
 }
 
 void header_parser::read_number_of_player() {
   int sum = read_int_le(_map);
     std::cout << "number of player " << sum << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
 void header_parser::read_flags() {
@@ -61,7 +59,6 @@ void header_parser::read_map_name() const {
     std::string s;
     std::getline(_map, s, '\0');
     std::cout << "map name is " << s << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
 void header_parser::read_unknown() {
@@ -78,6 +75,5 @@ void header_parser::read_file_id() {
         throw std::runtime_error("Unknown file id");
     }
     std::cout << "file id is " << std::string(file_id, 4) << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(1));
     delete[] file_id;
 }
