@@ -10,6 +10,7 @@
 #include "../data_objects/war3_inner_object/tileset_entry.h"
 #include "../data_objects/parser_inner_object/Vertex.h"
 #include "../file_utils/csv_parser.h"
+#include "../data_objects/parser_inner_object/TexCoord.h"
 
 class enviroment_file_map_parser : public abstract_map_file_parser {
 public:
@@ -29,6 +30,7 @@ private:
     unsigned char *unpacked_data;
     std::vector<tileset_entry> tilesets;
     std::vector<Vertex> verticies;
+    std::vector<TexCoord> texcoords;
     std::vector<unsigned> indicies;
 
     csv_parser parser;

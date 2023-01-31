@@ -6,6 +6,7 @@
 
 int main() {
     std::ifstream map("/home/zealot/CLionProjects/War3_Map_Parser/(2)EchoIsles.w3m",  std::ios::binary );
+//    std::ifstream map("/home/zealot/CLionProjects/War3_Map_Parser/test.w3m",  std::ios::binary );
     if (!map.is_open()) {
         return -1;
     }

@@ -72,7 +72,7 @@ void header_parser::read_file_id() {
     _map.read(file_id, 4);
     std::string res = "HM3W";
     if (res != std::string(file_id, 4)) {
-        throw std::runtime_error("Unknown file id");
+//        throw std::runtime_error("Unknown file id");
     }
     std::cout << "file id is " << std::string(file_id, 4) << std::endl;
     delete[] file_id;

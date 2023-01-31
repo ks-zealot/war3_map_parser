@@ -121,7 +121,7 @@ void enviroment_file_map_parser::aggregate() {
     count += 4;
     y = read_int_le(unpacked_data);
     unpacked_data += 4;
-    result_texture = png::image<png::rgb_pixel>( x * 64 ,y * 64);
+    result_texture = png::image<png::rgb_pixel>(x * 64, y * 64);
     count += 4;
     center_offset_x = read_float_le(unpacked_data);
     unpacked_data += 4;
@@ -217,63 +217,105 @@ void enviroment_file_map_parser::generate_mesh() {
      * (x * Y ) + 3, (x * Y ) + 2, x// правая грань
      */
 
-    for (int i = 0; i < x; i++) {
-        for (int k = 0; k < y; k++) {
+
+    for (int k = 0; k < y; k++) {
+        for (int i = 0; i < x; i++) {
             tileset_entry &ts = tilesets[i + (k * x)];
             std::string s(tileset_table[ts.texture_type], 4);
             png::image<png::rgb_pixel> &current_texture = tileset_textures[s];
             int pos = ts.texture_details;
-            int y_shift = pos / 8;
-            int x_shift = pos % 8;
-//            std::cout << "pos " << pos << " x_Shift " << x_shift << " y_shift " << y_shift << std::endl;
-            for (int _x = x_shift * 64, __x = 0; _x < x_shift * 64 + 64; ++_x, ++__x) {
-                for (int _y = y_shift * 64, __y = 0; _y < y_shift * 64 + 64; ++_y, ++__y) {
+            int y_shift = pos / 4;
+            int x_shift = pos % 4;
+            int idx = 0;
+            if ( i ==0 && k == 0) {
+                texcoords.push_back(TexCoord(0.0001, 0.0001));
+            }
+            if ( i ==x && k == 0) {
+                texcoords.push_back(TexCoord(0.9999, 0.0001));
+            }
+            if ( i ==0 && k == y) {
+                texcoords.push_back(TexCoord(0.0001, 0.9999));
+            }
+            if ( i ==x&& k == y) {
+                texcoords.push_back(TexCoord(0.9999, 0.9999));
+            } else {
+                float u = i * tile_size / (x * tile_size);
+                float w = k * tile_size / (y * tile_size);
+                texcoords.push_back(TexCoord(u, w));
+            }
 
-                    png::rgb_pixel pxl = current_texture.get_pixel(_x, _y);
-                    result_texture.set_pixel(__x + (i * 64), __y + (k * 64), pxl);
-                    // non-checking equivalent of image.set_pixel(x, y, ...);
+            if (pos < 16) {
+                for (int _x = 256 + x_shift * 64, __x = 0; _x < (256 + x_shift * 64) + 64; ++_x, ++__x) {
+                    for (int _y = y_shift * 64, __y = 0; _y < (y_shift * 64) + 64; ++_y, ++__y) {
+                        int global_x = __x + (i * 64);
+                        int global_y = __y + (k * 64);
+                        png::rgb_pixel pxl = current_texture.get_pixel(_x, _y);
+                        result_texture.set_pixel(global_x, global_y, pxl);
+                    }
+                }
+            } else if (pos == 17) {
+                for (int _x = 192, __x = 0; _x < 256; ++_x, ++__x) {
+                    for (int _y = 192, __y = 0; _y < 256; ++_y, ++__y) {
+                        int global_x = __x + (i * 64);
+                        int global_y = __y + (k * 64);
+                        png::rgb_pixel pxl = current_texture.get_pixel(_x, _y);
+                        result_texture.set_pixel(global_x, global_y, pxl);
+                    }
+                }
+            } else {
+                for (int _x = 0, __x = 0; _x < 64; ++_x, ++__x) {
+                    for (int _y = 0, __y = 0; _y < 64; ++_y, ++__y) {
+                        int global_x = __x + (i * 64);
+                        int global_y = __y + (k * 64);
+                        png::rgb_pixel pxl = current_texture.get_pixel(_x, _y);
+                        result_texture.set_pixel(global_x, global_y, pxl);
+                    }
                 }
             }
         }
     }
-    result_texture.write("output.png");
-    for (int i = 0; i < x; i++) {
-        for (int k = 0; k < y; k++) {
-            tileset_entry &ts = tilesets[k + (i * x)];//todo
+//    result_texture.write("output.png");
+    for (int k = 0; k < y; k++) {
+        for (int i = 0; i < x; i++) {
+            tileset_entry &ts = tilesets[i + (k * x)];
 
             verticies.push_back(Vertex(i * tile_size, k * tile_size, ts.height / 1000.f));
 
             if (i > minX && k > minY) {
-                add_triangle(count, count - 1, count - y - 1);//треугольник направленный налево вниз
+                add_triangle(count, count - 1, count - x);//треугольник направленный налево вниз
 
             }
             if (i < maxX - 1 && k < maxY - 1) {
-                add_triangle(count, count + 1, count + y + 1);//треуголник направленный направо вверх
+                add_triangle(count, count + 1, count + x);//треуголник направленный направо вверх
             }
             count++;
         }
     }
-    assert(verticies.size() == x * y);
-    verticies.push_back(Vertex(0, 0, 0)); //lb x * y
-    verticies.push_back(Vertex(0, y * tile_size, 0));//rb x * y + 1
-    verticies.push_back(Vertex(x * tile_size, 0, 0));//lt x * y + 2
-    verticies.push_back(Vertex(x * tile_size, y * tile_size, 0));// rt x * y + 3
-    unsigned last_vertex = x * y;
-    assert(verticies.size() == x * y + 4);
-    add_triangle(last_vertex, 0, 1);
-    add_triangle(last_vertex, last_vertex + 1, 1);//front face
+//    assert(verticies.size() == x * y);
+    verticies.push_back(Vertex(0, 0, 0)); //lb x * y + 1
+    verticies.push_back(Vertex(0, y * tile_size, 0));//rb x * y + 2
+    verticies.push_back(Vertex(x * tile_size, 0, 0));//lt x * y + 3
+    verticies.push_back(Vertex(x * tile_size, y * tile_size, 0));// rt x * y + 4
+    texcoords.push_back(TexCoord(0, 0));
+    texcoords.push_back(TexCoord(0, 1));
+    texcoords.push_back(TexCoord(1, 0));
+    texcoords.push_back(TexCoord(1, 1));
+    unsigned last_vertex = x * y  ;
+//    assert(verticies.size() == x * y + 4);
+    add_triangle(last_vertex + 1, 0, y);
+    add_triangle(last_vertex, last_vertex + 1, y);//front face
 
-    add_triangle(last_vertex + 2, last_vertex - 2, last_vertex - 1);//back face
-    add_triangle(last_vertex + 2, last_vertex + 3, last_vertex - 1);
+    add_triangle(last_vertex + 2, x * y - y, x * y);//back face
+    add_triangle(last_vertex + 2, last_vertex + 3, x * y);
 
-    add_triangle(last_vertex, 0, last_vertex + 2);//left face
-    add_triangle(0, last_vertex - 2, last_vertex + 2);
+    add_triangle(last_vertex, 0, x * y - y);//left face
+    add_triangle(last_vertex, last_vertex + 2, x * y - y);
 //
-    add_triangle(last_vertex + 1, 1, last_vertex + 3);//right face
-    add_triangle(last_vertex - 1, last_vertex + 3, 1);
+    add_triangle(last_vertex + 1, y, x * y);//right face
+    add_triangle(last_vertex + 1, last_vertex + 3, x * y);
 //
-    add_triangle(last_vertex, last_vertex + 1, last_vertex + 2);//bottom face
-    add_triangle(last_vertex + 1, last_vertex + 2, last_vertex + 3);
+    add_triangle(last_vertex, last_vertex + 1, last_vertex + 3);//bottom face
+    add_triangle(last_vertex, last_vertex + 2, last_vertex + 3);
 }
 
 void enviroment_file_map_parser::add_triangle(const unsigned &x1, const unsigned &x2, const unsigned &x3) {
@@ -295,8 +337,11 @@ void enviroment_file_map_parser::write_mesh() {
     tinygltf::Buffer buffer;
     tinygltf::BufferView bufferView1;
     tinygltf::BufferView bufferView2;
+    tinygltf::BufferView bufferView3;
+//    tinygltf::BufferView bufferView4;
     tinygltf::Accessor accessor1;
     tinygltf::Accessor accessor2;
+    tinygltf::Accessor accessor3;
     tinygltf::Asset asset;
 
     std::vector<unsigned char> indicies_data;
@@ -336,10 +381,25 @@ void enviroment_file_map_parser::write_mesh() {
             verticies_data.push_back(bytes[i]);
         }
     }
+    std::vector<unsigned char> texcoord_data;
+
     buffer.data.insert(buffer.data.end(), indicies_data.begin(), indicies_data.end());
     buffer.data.insert(buffer.data.end(), verticies_data.begin(), verticies_data.end());
-
-
+    for (TexCoord &t: texcoords) {
+        char bytes[sizeof(float) * 2];
+        unsigned char *chr1 = static_cast<unsigned char *>(static_cast<void *>(&t.u));
+        unsigned char *chr2 = static_cast<unsigned char *>(static_cast<void *>(&t.w));
+        std::copy(chr1,
+                  chr1 + sizeof(float),
+                  bytes);
+        std::copy(chr2,
+                  chr2 + sizeof(float),
+                  bytes + sizeof(float));
+        for (int i = 0; i < sizeof(float) * 2; i++) {
+            texcoord_data.push_back(bytes[i]);
+        }
+    }
+    buffer.data.insert(buffer.data.end(), texcoord_data.begin(), texcoord_data.end());
     // "The indices of the vertices (ELEMENT_ARRAY_BUFFER) take up 72 bytes in the
     // start of the buffer.
     bufferView1.buffer = 0;
@@ -350,9 +410,16 @@ void enviroment_file_map_parser::write_mesh() {
     // The vertices take up 96 bytes (8 vertices * 3 floating points * 4 bytes)
     // at position 40 in the buffer and are of type ARRAY_BUFFER
     bufferView2.buffer = 0;
-    bufferView2.byteOffset = indicies_data.size();;
+    bufferView2.byteOffset = indicies_data.size();
     bufferView2.byteLength = verticies_data.size();
     bufferView2.target = TINYGLTF_TARGET_ARRAY_BUFFER;
+
+    bufferView3.buffer = 0;
+    bufferView3.byteOffset = indicies_data.size() + verticies_data.size();
+    bufferView3.byteLength = texcoord_data.size();
+    bufferView3.target = TINYGLTF_TARGET_ARRAY_BUFFER;
+
+
 
     // Describe the layout of bufferView1, the indices of the vertices
     accessor1.bufferView = 0;
@@ -369,12 +436,20 @@ void enviroment_file_map_parser::write_mesh() {
     accessor2.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
     accessor2.count = verticies.size();//8;
     accessor2.type = TINYGLTF_TYPE_VEC3;
-//    accessor2.maxValues = {1.0, 1.0, 1.0};// todo чтобы вернуть, надо переопределить операторы больше меньше у вершины
-//    accessor2.minValues = {-1.0, -1.0, -1.0};
 
+    accessor3.bufferView = 2;
+    accessor3.byteOffset = 0;
+    accessor3.componentType = TINYGLTF_COMPONENT_TYPE_FLOAT;
+    accessor3.count = texcoords.size();//8;
+    accessor3.type = TINYGLTF_TYPE_VEC2;
+    accessor2.maxValues = {1.0, 1.0, 1.0};// todo чтобы вернуть, надо переопределить операторы больше меньше у вершины
+    accessor2.minValues = {-1.0, -1.0, -1.0};
+    accessor3.maxValues = {1.0, 1.0};
+    accessor3.minValues = {-1.0, -1.0};
     // Build the mesh primitive and add it to the mesh
     primitive.indices = 0;                 // The index of the accessor for the vertex indices
     primitive.attributes["POSITION"] = 1;  // The index of the accessor for positions
+    primitive.attributes["TEXCOORD_0"] = 2;  // The index of the accessor for positions
     primitive.material = 0;
     primitive.mode = TINYGLTF_MODE_TRIANGLES;
     mesh.primitives.push_back(primitive);
@@ -395,16 +470,46 @@ void enviroment_file_map_parser::write_mesh() {
     m.buffers.push_back(buffer);
     m.bufferViews.push_back(bufferView1);
     m.bufferViews.push_back(bufferView2);
+    m.bufferViews.push_back(bufferView3);
     m.accessors.push_back(accessor1);
     m.accessors.push_back(accessor2);
+    m.accessors.push_back(accessor3);
     m.asset = asset;
-
+    tinygltf::TextureInfo tx;
+    tx.index = 0;
     // Create a simple material
     tinygltf::Material mat;
     mat.pbrMetallicRoughness.baseColorFactor = {1.0f, 0.9f, 0.9f, 1.0f};
+    mat.pbrMetallicRoughness.baseColorTexture = tx;
     mat.doubleSided = true;
     m.materials.push_back(mat);
-
+    tinygltf::Image img;
+    img.width = x * 64;
+    img.height = y * 64;
+    img.mimeType = "image/png";
+    img.uri = "/home/zealot/CLionProjects/War3_Map_Parser/output.png";
+//    tinygltf::Sampler sample;
+//    sample.magFilter = 9729;
+//    sample.minFilter = 9987;
+//    sample.wrapS = TINYGLTF_TEXTURE_WRAP_REPEAT;
+//    sample.wrapT = 33648;
+//    img.bufferView = 3;
+//    std::stringstream stream;
+//    result_texture.write_stream(stream);
+//    std::string s = stream.str();
+//    buffer.data.insert(buffer.data.end(), s.begin(), s.end());
+//    m.buffers.push_back(buffer);
+//    bufferView4.buffer = 0;
+//    bufferView4.byteOffset = indicies_data.size() + verticies_data.size() + texcoords.size();
+//    bufferView4.byteLength = s.size();
+//    bufferView4.target = TINYGLTF_TARGET_ELEMENT_ARRAY_BUFFER;
+//    m.bufferViews.push_back(bufferView4);
+    m.images.push_back(img);
+    tinygltf::Texture tex;
+    tex.source = 0;
+//    tex.sampler = 0;
+    m.textures.push_back(tex);
+//    m.samplers.push_back(sample);
     // Save it to a file
     tinygltf::TinyGLTF gltf;
     gltf.WriteGltfSceneToFile(&m, "map.gltf", //todo remove hardcode

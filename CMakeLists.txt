@@ -12,6 +12,8 @@ add_executable(War3_Map_Parser main.cpp
         tinygltf/stb_image.h
         tinygltf/stb_image_write.h
         tinygltf/tiny_gltf.h
+        data_objects/parser_inner_object/Vertex.h
+        data_objects/parser_inner_object/TexCoord.h
         map_parser/map_parser.h
         map_parser/header_parser.h
         map_parser/header_parser.cpp
