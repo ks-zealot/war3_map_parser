@@ -188,7 +188,7 @@ void enviroment_file_map_parser::generate_mesh() {
     unsigned maxX = x;
     unsigned maxY = y;
     unsigned tile_size = 1;//400;
-    unsigned count = 0;
+    unsigned count = 4;
 
     /**
      * нам нужны всего x * y точек плюс 4
@@ -216,71 +216,46 @@ void enviroment_file_map_parser::generate_mesh() {
      * x + 1 ,(x * Y ) + 3 , (x * Y ) + 2
      * (x * Y ) + 3, (x * Y ) + 2, x// правая грань
      */
+    verticies.push_back(Vertex(0, 0, 0)); //lb
+    verticies.push_back(Vertex(x, 0, 0)); //1 rb x * y + 1
+    verticies.push_back(Vertex(0, y, 0)); //2 lt x * y + 1
+    verticies.push_back(Vertex(x, y, 0)); //3 rb x * y + 1
 
-
-    for (int k = 0; k < y; k++) {
-        for (int i = 0; i < x; i++) {
-            tileset_entry &ts = tilesets[i + (k * x)];
-            std::string s(tileset_table[ts.texture_type], 4);
-            png::image<png::rgb_pixel> &current_texture = tileset_textures[s];
-            int pos = ts.texture_details;
-            int y_shift = pos / 4;
-            int x_shift = pos % 4;
-            int idx = 0;
-            if ( i ==0 && k == 0) {
-                texcoords.push_back(TexCoord(0.0001, 0.0001));
-            }
-            if ( i ==x && k == 0) {
-                texcoords.push_back(TexCoord(0.9999, 0.0001));
-            }
-            if ( i ==0 && k == y) {
-                texcoords.push_back(TexCoord(0.0001, 0.9999));
-            }
-            if ( i ==x&& k == y) {
-                texcoords.push_back(TexCoord(0.9999, 0.9999));
-            } else {
-                float u = i * tile_size / (x * tile_size);
-                float w = k * tile_size / (y * tile_size);
-                texcoords.push_back(TexCoord(u, w));
-            }
-
-            if (pos < 16) {
-                for (int _x = 256 + x_shift * 64, __x = 0; _x < (256 + x_shift * 64) + 64; ++_x, ++__x) {
-                    for (int _y = y_shift * 64, __y = 0; _y < (y_shift * 64) + 64; ++_y, ++__y) {
-                        int global_x = __x + (i * 64);
-                        int global_y = __y + (k * 64);
-                        png::rgb_pixel pxl = current_texture.get_pixel(_x, _y);
-                        result_texture.set_pixel(global_x, global_y, pxl);
-                    }
-                }
-            } else if (pos == 17) {
-                for (int _x = 192, __x = 0; _x < 256; ++_x, ++__x) {
-                    for (int _y = 192, __y = 0; _y < 256; ++_y, ++__y) {
-                        int global_x = __x + (i * 64);
-                        int global_y = __y + (k * 64);
-                        png::rgb_pixel pxl = current_texture.get_pixel(_x, _y);
-                        result_texture.set_pixel(global_x, global_y, pxl);
-                    }
-                }
-            } else {
-                for (int _x = 0, __x = 0; _x < 64; ++_x, ++__x) {
-                    for (int _y = 0, __y = 0; _y < 64; ++_y, ++__y) {
-                        int global_x = __x + (i * 64);
-                        int global_y = __y + (k * 64);
-                        png::rgb_pixel pxl = current_texture.get_pixel(_x, _y);
-                        result_texture.set_pixel(global_x, global_y, pxl);
-                    }
-                }
-            }
-        }
-    }
-//    result_texture.write("output.png");
+    add_triangle(0, 1, 3);
+    add_triangle(0, 2, 3);
+    texcoords.push_back(TexCoord(0, 0));
+    texcoords.push_back(TexCoord(0, 1));
+    texcoords.push_back(TexCoord(1, 0));
+    texcoords.push_back(TexCoord(1, 1));
+//    verticies.push_back(Vertex(0, 0, 8)); //lb
+//    verticies.push_back(Vertex(x, 0, 8)); //rb x * y + 1
     for (int k = 0; k < y; k++) {
         for (int i = 0; i < x; i++) {
             tileset_entry &ts = tilesets[i + (k * x)];
 
             verticies.push_back(Vertex(i * tile_size, k * tile_size, ts.height / 1000.f));
-
+            if (i == 0 && k == 0) {
+                texcoords.push_back(TexCoord(0.0001, 0.0001));
+            }
+            if (i == x - 1 && k == 0) {
+                texcoords.push_back(TexCoord(0.9999, 0.0001));
+                add_triangle(0, 4, x + 3);
+                add_triangle(0, 1, x + 3);
+            }
+            if (i == 0 && k == y - 1) {
+                texcoords.push_back(TexCoord(0.0001, 0.9999));
+                add_triangle(0, 4, count);
+                add_triangle(0, 2, count);
+            }
+            if (i == x - 1 && k == y - 1) {
+                texcoords.push_back(TexCoord(0.9999, 0.9999));
+                add_triangle(1, x + 3, count);
+                add_triangle(1, 3, count);
+            } else {
+                float u = i * tile_size / (x * tile_size);
+                float w = k * tile_size / (y * tile_size);
+                texcoords.push_back(TexCoord(u, w));
+            }
             if (i > minX && k > minY) {
                 add_triangle(count, count - 1, count - x);//треугольник направленный налево вниз
 
@@ -291,31 +266,113 @@ void enviroment_file_map_parser::generate_mesh() {
             count++;
         }
     }
-//    assert(verticies.size() == x * y);
-    verticies.push_back(Vertex(0, 0, 0)); //lb x * y + 1
-    verticies.push_back(Vertex(0, y * tile_size, 0));//rb x * y + 2
-    verticies.push_back(Vertex(x * tile_size, 0, 0));//lt x * y + 3
-    verticies.push_back(Vertex(x * tile_size, y * tile_size, 0));// rt x * y + 4
-    texcoords.push_back(TexCoord(0, 0));
-    texcoords.push_back(TexCoord(0, 1));
-    texcoords.push_back(TexCoord(1, 0));
-    texcoords.push_back(TexCoord(1, 1));
-    unsigned last_vertex = x * y  ;
-//    assert(verticies.size() == x * y + 4);
-    add_triangle(last_vertex + 1, 0, y);
-    add_triangle(last_vertex, last_vertex + 1, y);//front face
+//    verticies.push_back(Vertex(0, y, 8)); //lt x * y + 1
+//    verticies.push_back(Vertex(x, y, 8)); //rb x * y + 1
 
-    add_triangle(last_vertex + 2, x * y - y, x * y);//back face
-    add_triangle(last_vertex + 2, last_vertex + 3, x * y);
+//    add_triangle(4, 5, 7);
+//    add_triangle(4, 6, 7);
+//
+//    add_triangle(0, 5, 6);
+//    add_triangle(0, 1, 6);
+//
+//    add_triangle(0, 1, 6);
+//    add_triangle(0, 2, 6);
+//
+//    add_triangle(1, 5, 7);
+//    add_triangle(1, 3, 7);
+//
+//    add_triangle(2, 3, 7);
+//    add_triangle(2, 6, 7);
 
-    add_triangle(last_vertex, 0, x * y - y);//left face
-    add_triangle(last_vertex, last_vertex + 2, x * y - y);
+
 //
-    add_triangle(last_vertex + 1, y, x * y);//right face
-    add_triangle(last_vertex + 1, last_vertex + 3, x * y);
+//    texcoords.push_back(TexCoord(0.0001, .0001));
+//    texcoords.push_back(TexCoord(.0001, 0.9999));
+//    texcoords.push_back(TexCoord(0.9999, .0001));
+//    texcoords.push_back(TexCoord(0.9999, 0.9999));
+
+//    for (int k = 0; k < y; k++) {
+//        for (int i = 0; i < x; i++) {
+//            tileset_entry &ts = tilesets[i + (k * x)];
+//            std::string s(tileset_table[ts.texture_type], 4);
+//            png::image<png::rgb_pixel> &current_texture = tileset_textures[s];
+//            int pos = ts.texture_details;
+//            int y_shift = pos / 4;
+//            int x_shift = pos % 4;
+//            if ( i ==0 && k == 0) {
+//                texcoords.push_back(TexCoord(0.0001, 0.0001));
+//            }
+//            if ( i ==x && k == 0) {
+//                texcoords.push_back(TexCoord(0.9999, 0.0001));
+//            }
+//            if ( i ==0 && k == y) {
+//                texcoords.push_back(TexCoord(0.0001, 0.9999));
+//            }
+//            if ( i ==x&& k == y) {
+//                texcoords.push_back(TexCoord(0.9999, 0.9999));
+//            } else {
+//                float u = i * tile_size / (x * tile_size);
+//                float w = k * tile_size / (y * tile_size);
+//                texcoords.push_back(TexCoord(u, w));
+//            }
 //
-    add_triangle(last_vertex, last_vertex + 1, last_vertex + 3);//bottom face
-    add_triangle(last_vertex, last_vertex + 2, last_vertex + 3);
+//            if (pos < 16) {
+//                for (int _x = 256 + x_shift * 64, __x = 0; _x < (256 + x_shift * 64) + 64; ++_x, ++__x) {
+//                    for (int _y = y_shift * 64, __y = 0; _y < (y_shift * 64) + 64; ++_y, ++__y) {
+//                        int global_x = __x + (i * 64);
+//                        int global_y = __y + (k * 64);
+//                        png::rgb_pixel pxl = current_texture.get_pixel(_x, _y);
+//                        result_texture.set_pixel(global_x, global_y, pxl);
+//                    }
+//                }
+//            } else if (pos == 17) {
+//                for (int _x = 192, __x = 0; _x < 256; ++_x, ++__x) {
+//                    for (int _y = 192, __y = 0; _y < 256; ++_y, ++__y) {
+//                        int global_x = __x + (i * 64);
+//                        int global_y = __y + (k * 64);
+//                        png::rgb_pixel pxl = current_texture.get_pixel(_x, _y);
+//                        result_texture.set_pixel(global_x, global_y, pxl);
+//                    }
+//                }
+//            } else {
+//                for (int _x = 0, __x = 0; _x < 64; ++_x, ++__x) {
+//                    for (int _y = 0, __y = 0; _y < 64; ++_y, ++__y) {
+//                        int global_x = __x + (i * 64);
+//                        int global_y = __y + (k * 64);
+//                        png::rgb_pixel pxl = current_texture.get_pixel(_x, _y);
+//                        result_texture.set_pixel(global_x, global_y, pxl);
+//                    }
+//                }
+//            }
+//        }
+//    }
+////    result_texture.write("output.png");
+
+////    assert(verticies.size() == x * y);
+//    verticies.push_back(Vertex(0, 0, 0)); //lb x * y + 1
+//    verticies.push_back(Vertex(0, y * tile_size, 0));//rb x * y + 2
+//    verticies.push_back(Vertex(x * tile_size, 0, 0));//lt x * y + 3
+//    verticies.push_back(Vertex(x * tile_size, y * tile_size, 0));// rt x * y + 4
+//    texcoords.push_back(TexCoord(0, 0));
+//    texcoords.push_back(TexCoord(0, 1));
+//    texcoords.push_back(TexCoord(1, 0));
+//    texcoords.push_back(TexCoord(1, 1));
+//    unsigned last_vertex = x * y  ;
+////    assert(verticies.size() == x * y + 4);
+//    add_triangle(last_vertex + 1, 0, y);
+//    add_triangle(last_vertex, last_vertex + 1, y);//front face
+//
+//    add_triangle(last_vertex + 2, x * y - y, x * y);//back face
+//    add_triangle(last_vertex + 2, last_vertex + 3, x * y);
+//
+//    add_triangle(last_vertex, 0, x * y - y);//left face
+//    add_triangle(last_vertex, last_vertex + 2, x * y - y);
+//
+//    add_triangle(last_vertex + 1, y, x * y);//right face
+//    add_triangle(last_vertex + 1, last_vertex + 3, x * y);
+//
+//    add_triangle(last_vertex, last_vertex + 1, last_vertex + 3);//bottom face
+//    add_triangle(last_vertex, last_vertex + 2, last_vertex + 3);
 }
 
 void enviroment_file_map_parser::add_triangle(const unsigned &x1, const unsigned &x2, const unsigned &x3) {
@@ -373,10 +430,10 @@ void enviroment_file_map_parser::write_mesh() {
                   bytes);
         std::copy(chr2,
                   chr2 + sizeof(float),
-                  bytes + sizeof(float));
+                  bytes + sizeof(float) * 2);
         std::copy(chr3,
                   chr3 + sizeof(float),
-                  bytes + (sizeof(float)) * 2);
+                  bytes + (sizeof(float)));
         for (int i = 0; i < sizeof(float) * 3; i++) {
             verticies_data.push_back(bytes[i]);
         }
