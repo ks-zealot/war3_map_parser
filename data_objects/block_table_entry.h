@@ -34,6 +34,7 @@ class block_table_entry {
     friend class abstract_map_file_parser;
 
     friend class enviroment_file_map_parser;
+    friend class doodads_parser;
 
 private:
     unsigned file_pos;

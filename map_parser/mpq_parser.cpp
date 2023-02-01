@@ -14,6 +14,7 @@
 #include "abstract_map_file_parser.h"
 #include "enviroment_file_map_parser.h"
 #include "../decompressors/abstract_decompressor.h"
+#include "doodads_parser.h"
 
 mpq_parser::mpq_parser(std::ifstream &map) : _map(map) {
 
@@ -65,12 +66,7 @@ void mpq_parser::parse() {
 
     char *block = new char[block_table_entries * 16];
     _map.read(block, block_table_entries * 16);
-//    ConvertUInt32Buffer(block,block_table_entries * 64);
     DecryptMpqBlock(block, block_table_entries * 16, MPQ_KEY_BLOCK_TABLE);
-//    ConvertUInt32Buffer(block,block_table_entries * 64);
-//    for (int i = 0; i < block_table_entries; i++) {
-//        read_block(block, i);
-//    }
     for (int i = 0; i < block_table_entries; i++) {
         block_table_entries_container[i] = read_block_entry(block, i);
     }
@@ -497,6 +493,8 @@ std::vector<std::string> mpq_parser::parse_list_file(std::string s) {
 abstract_map_file_parser *mpq_parser::get_parser(std::string s, block_table_entry& bp, std::ifstream& _map) {
     if (s == "war3map.w3e" )
             return new enviroment_file_map_parser(bp, _map);
+    if (s == "war3map.doo" )
+        return new doodads_parser(bp, _map);
     return nullptr;
 }
 

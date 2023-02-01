@@ -24,6 +24,8 @@ add_executable(War3_Map_Parser main.cpp
         map_parser/util.cpp
         file_utils/csv_parser.cpp
         file_utils/csv_parser.h
+        file_utils/doodads_csv_parser.cpp
+        file_utils/doodads_csv_parser.h
         data_objects/block_table_entry.cpp
         data_objects/block_table_entry.h
         data_objects/hash_table_entry.cpp
@@ -32,6 +34,8 @@ add_executable(War3_Map_Parser main.cpp
         map_parser/abstract_map_file_parser.h
         map_parser/enviroment_file_map_parser.cpp
         map_parser/enviroment_file_map_parser.h
+        map_parser/doodads_parser.cpp
+        map_parser/doodads_parser.h
         decompressors/abstract_decompressor.cpp
         decompressors/abstract_decompressor.h
         decompressors/bz_decompressor.cpp

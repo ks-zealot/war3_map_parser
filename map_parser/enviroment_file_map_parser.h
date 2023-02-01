@@ -20,9 +20,9 @@ public:
                                                                                                             fstream),
                                                                                    parser("/home/zealot/CLionProjects/War3_Map_Parser/assets/TerrainArt/Terrain.csv") {};
 
-    void parse() override;
+    virtual void parse() override;
 
-    void aggregate() override;
+    virtual void aggregate() override;
 
     void read_block(const std::vector<unsigned int> &offset_table, int i);
 

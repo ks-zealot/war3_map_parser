@@ -45,6 +45,7 @@ void enviroment_file_map_parser::parse() {
     for (int i = 0; i < offset_table.size() - 1; i++) {
         read_block(offset_table, i);
     }
+    delete[] data;
     aggregate();
     generate_mesh();
     write_mesh();
@@ -151,7 +152,6 @@ void enviroment_file_map_parser::aggregate() {
         entry.is_water = high & 0x0040;
         entry.is_undead = high & 0x0020;
         entry.texture_type = low; // ref to tileset table
-        std::string s(tileset_table[low], 4);
         if (low > a) {
             throw std::runtime_error("invalid texture");
         }

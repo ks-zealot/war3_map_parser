@@ -14,5 +14,5 @@ abstract_decompressor *abstract_decompressor::get_decompressor(unsigned char com
         case 0x10:
             return new bz_decompressor();
     }
-   throw std::runtime_error("unknon decompression type");
+   throw std::runtime_error("unknown decompression type");
 }
