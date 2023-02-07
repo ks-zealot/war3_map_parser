@@ -43,9 +43,11 @@ add_executable(War3_Map_Parser main.cpp
         decompressors/zLib_decompressor.cpp
         decompressors/zLib_decompressor.h
         data_objects/war3_inner_object/tileset_entry.cpp
-        data_objects/war3_inner_object/tileset_entry.h)
+        data_objects/war3_inner_object/tileset_entry.h
+        data_objects/war3_inner_object/special_doodads_entry.h
+        file_utils/terrain_csv_parser.h file_utils/terrain_csv_parser.cpp file_utils/destructable_unit_parser.h file_utils/destructable_unit_parser.cpp file_utils/csv_parser_structs.h)
 target_link_libraries(War3_Map_Parser PRIVATE BZip2::BZip2 ZLIB::ZLIB  ${PNG_LIBRARIES}  )
-add_executable(test_tileset data_objects/war3_inner_object/tileset_entry.h map_parser/util.cpp test/test_tileset.cpp data_objects/parser_inner_object/Vertex.h)
+add_executable(test_tileset data_objects/war3_inner_object/tileset_entry.h map_parser/util.cpp test/test_tileset.cpp data_objects/parser_inner_object/Vertex.h )
 target_link_libraries(test_tileset)
 
 # enable testing functionality

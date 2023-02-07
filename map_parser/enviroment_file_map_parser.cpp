@@ -20,7 +20,7 @@
 #include "../data_objects/war3_inner_object/tileset_entry.h"
 
 void enviroment_file_map_parser::parse() {
-    parser.parse();
+    parser->parse();
     unsigned bytes_to_read = bp.is_file_compress ? bp.file_comp_size : bp.file_size;
 
     char *data = new char[bytes_to_read];
@@ -76,6 +76,7 @@ enviroment_file_map_parser::~enviroment_file_map_parser() {
         delete[]  cliff_tileset_table[i];
     }
     delete[]  cliff_tileset_table;
+    delete parser;
 }
 
 void enviroment_file_map_parser::aggregate() {
@@ -103,7 +104,7 @@ void enviroment_file_map_parser::aggregate() {
         memcpy(tileset_table[i], unpacked_data, 4);
         std::string id(tileset_table[i], 4);
         tileset_textures[id] = png::image<png::rgb_pixel>(
-                "/home/zealot/CLionProjects/War3_Map_Parser/assets/" + parser.texture_name(id));
+                "/home/zealot/CLionProjects/War3_Map_Parser/assets/" + parser->name(id));
         unpacked_data += 4;
         count += 4;
     }

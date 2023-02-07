@@ -4,45 +4,16 @@
 
 #include <filesystem>
 #include "csv_parser.h"
+#include "csv_parser_structs.h"
 
-csv_parser::csv_parser(std::string file) {
+template<typename T>
+csv_parser<T>::csv_parser(std::string file) {
     csv = std::ifstream(file);
 
 }
 
-void csv_parser::parse() {
-    while (csv.peek() != 0x0A) {
-        csv.get();
-    }
-    csv.get();
-
-    while (csv.peek() != EOF) {
-        terrain_entry entry;
-        entry.tile_id = read_cell();
-        entry.dir = read_cell();
-        entry.file = read_cell();
-        entry.comment = read_cell();
-        entry.name = read_cell();
-        entry.buildable = csv.get() == '1';
-        csv.get();
-        entry.footprints = csv.get() == '1';
-        csv.get();
-        entry.walkable = csv.get() == '1';
-        csv.get();
-        entry.flyable = csv.get() == '1';
-        csv.get();
-        entry.blightPri << csv.get() - '0';
-        csv.get();
-        read_vector(entry.convert_to);
-        entry.in_beta = csv.get() == '1';
-        csv.get();
-        terrain_map[entry.tile_id] = entry;
-    }
-
-    csv.close();
-}
-
-std::string csv_parser::read_cell() {
+template<typename T>
+std::string csv_parser<T>::read_cell() {
     std::vector<char> cell_store;
     while (csv.peek() != ';') {
         cell_store.push_back(csv.get());
@@ -51,29 +22,85 @@ std::string csv_parser::read_cell() {
     return std::string(cell_store.begin(), cell_store.end());
 }
 
-void csv_parser::read_vector(std::vector<std::string> &s) {
-    char buf[4] = {0, 0, 0, 0};
+template<typename T>
+void csv_parser<T>::read_vector(std::vector<std::string> &s) {
+    std::vector<char> local;
     while (csv.peek() != ';') {
-        csv.read(buf, 4);
-        s.push_back(std::string(buf, 4));
+        local.push_back(csv.get());
         if (csv.peek() == ',' || csv.peek() == '.') {
             csv.get();
+            s.push_back(std::string(local.begin(), local.end()));
         }
+    }
+    if (!local.empty()) {
+        s.push_back(std::string(local.begin(), local.end()));
     }
     csv.get();
 }
 
-std::string csv_parser::texture_name(std::string &id) {
-    if (!terrain_map.contains(id)) {
+template<typename T>
+std::string
+csv_parser<T>::fix_file_separator(std::string &s) {
+    std::replace(s.begin(), s.end(), '\\', std::filesystem::path::preferred_separator);
+    return s;
+}
+
+template<typename T>
+void csv_parser<T>::skip_header() {
+    while (csv.peek() != 0x0A) {
+        csv.get();
+    }
+    csv.get();
+}
+
+template<typename T>
+char csv_parser<T>::read_char() {
+    char c = csv.get();
+    csv.get();
+    return c;
+}
+
+template<typename T>
+bool csv_parser<T>::read_bool() {
+    bool b = read_char() == '1';
+    return b;
+}
+
+template<typename T>
+int csv_parser<T>::get_int() {
+    int i = std::stoi(read_cell());
+    return i;
+}
+
+template<typename T>
+float csv_parser<T>::read_float() {
+    return std::stof(read_cell());
+}
+
+template<typename T>
+int csv_parser<T>::get_int_or_blank() {
+    if (csv.peek() == '-') {
+        while (csv.get() != ';') {}
+        return -1;
+    }
+    return get_int();
+}
+
+template<typename T>
+std::string csv_parser<T>::name(std::string &id) {
+    if (!_map.contains(id)) {
         throw std::runtime_error("could not found texture");
     }
-    terrain_entry entry = terrain_map[id];
+    T &entry = _map[id];
     std::string s = entry.dir + "\\" + entry.file + ".png";
     return fix_file_separator(s);
 }
 
-std::string
-csv_parser::fix_file_separator(std::string& s) {
-    std::replace( s.begin(), s.end(), '\\', std::filesystem::path::preferred_separator);
-    return s;
-}
+template
+class csv_parser<destructable_unit_entry>;
+
+template
+class csv_parser<doodads_entry>;
+
+template
+class csv_parser<terrain_entry>;

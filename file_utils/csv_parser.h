@@ -10,39 +10,37 @@
 #include <unordered_map>
 #include <vector>
 
-//tileID;dir;file;comment;name;buildable;footprints;walkable;flyable;blightPri;convertTo;InBeta
-struct terrain_entry {
-    std::string tile_id;
-    std::string dir;
-    std::string file;
-    std::string comment;
-    std::string name;
-    bool buildable;
-    bool footprints;
-    bool walkable;
-    bool flyable;
-    int blightPri;
-    std::vector<std::string> convert_to;
-    bool in_beta;
-};
-
+template<typename T>
 class csv_parser {
 public:
     csv_parser(std::string file);
 
-    void parse();
+    virtual void parse() = 0;
 
-    std::string texture_name(std::string& id);
+    std::string name(std::string& id);
 
-private:
+protected:
     std::ifstream csv;
-    std::unordered_map<std::string, terrain_entry> terrain_map;
 
     std::string read_cell();
 
+    char read_char();
+
+    bool read_bool();
+
+    int get_int();
+
+    int get_int_or_blank();
+
+    float read_float();
+
     void read_vector(std::vector<std::string> &s);
 
-    std::string fix_file_separator(std::string& s);
+    std::string fix_file_separator(std::string &s);
+
+    void skip_header();
+
+    std::unordered_map<std::string, T> _map;
 };
 
 

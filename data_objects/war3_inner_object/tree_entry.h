@@ -20,8 +20,9 @@
 //int: number "n" of item sets dropped on death (this can only be greater than 0 if the item table pointer was -1)
 //then there is n times a item set structure
 //int: Tree ID number in the World Editor (little endian) (each tree has a different one)
-class tree_entry {
-public:
+struct tree_entry {
+    std::string tree_id;
+    int variation;
     float x;
     float y;
     float z;
@@ -35,7 +36,6 @@ public:
     int item_id;
     int item_count;
     int id;
-
 };
 
 

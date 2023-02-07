@@ -11,14 +11,15 @@
 #include "../data_objects/parser_inner_object/Vertex.h"
 #include "../file_utils/csv_parser.h"
 #include "../data_objects/parser_inner_object/TexCoord.h"
+#include "../file_utils/terrain_csv_parser.h"
 
 class enviroment_file_map_parser : public abstract_map_file_parser {
 public:
     virtual ~enviroment_file_map_parser();
 
     enviroment_file_map_parser(block_table_entry &entry, std::ifstream &fstream) : abstract_map_file_parser(entry,
-                                                                                                            fstream),
-                                                                                   parser("/home/zealot/CLionProjects/War3_Map_Parser/assets/TerrainArt/Terrain.csv") {};
+                                                                                                            fstream)
+                                                                                   {};
 
     virtual void parse() override;
 
@@ -33,7 +34,7 @@ private:
     std::vector<TexCoord> texcoords;
     std::vector<unsigned> indicies;
 
-    csv_parser parser;
+    csv_parser<terrain_entry>* parser = new terrain_csv_parser("/home/zealot/CLionProjects/War3_Map_Parser/assets/TerrainArt/Terrain.csv");
 
     unsigned char main_tileset;
     unsigned int custom_tilesets_flag;

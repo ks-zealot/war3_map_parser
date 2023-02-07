@@ -9,8 +9,11 @@
 #include "doodads_parser.h"
 #include "../decompressors/abstract_decompressor.h"
 #include "util.h"
+#include "../data_objects/war3_inner_object/special_doodads_entry.h"
 
 void doodads_parser::parse() {
+    _doodads_csv_parser->parse();
+    _destructable_unit_parser->parse();
     unsigned bytes_to_read = bp.is_file_compress ? bp.file_comp_size : bp.file_size;
     char *data = new char[bytes_to_read];
     _map.seekg(512 + bp.file_pos); //todo remove hardcode
@@ -28,6 +31,7 @@ void doodads_parser::parse() {
         offset_table.push_back(_offset);
         _offset = *casted++;
     }
+    offset_table.push_back(_offset);//todo убрать хак
     unsigned sector_size = 4096;//todo remove hardcode
     unpacked_data = new unsigned char[sector_size *
                                       offset_table.size()];//todo выделять памяти сколько требуется, а не больше
@@ -44,33 +48,49 @@ void doodads_parser::aggregate() {
     std::string w3e = std::string((char *) unpacked_data, 4);
     unpacked_data += 4;
     count += 4;
-    assert (w3e == "W3do!");
+    assert (w3e == "W3do");
     unsigned version = read_int_le(unpacked_data);
     unpacked_data += 4;
     count += 4;
-    assert (version == 8);
+    assert (version == 7 || version == 8);
     unsigned subversion = read_int_le(unpacked_data);
     unpacked_data += 4;
     count += 4;
     numbers_of_trees = read_int_le(unpacked_data);
     unpacked_data += 4;
     count += 4;
-    std::cout << numbers_of_trees << "trees" << std::endl;
+    std::cout << numbers_of_trees << " trees" << std::endl;
     for (int i = 0; i < numbers_of_trees; i++) {
         tree_entry tr;
+        if (i == 1852) {
+            std::cout << std::endl;
+        }
+        tr.tree_id = std::string((char *) unpacked_data, 4);
+        unpacked_data += 4;
+        count += 4;
+        tr.variation = read_int_le(unpacked_data);
+        unpacked_data += 4;
+        count += 4;
         tr.x = read_float_le(unpacked_data);
+        unpacked_data += 4;
         count += 4;
         tr.y = read_float_le(unpacked_data);
+        unpacked_data += 4;
         count += 4;
         tr.z = read_float_le(unpacked_data);
+        unpacked_data += 4;
         count += 4;
         tr.angle = read_float_le(unpacked_data);
+        unpacked_data += 4;
         count += 4;
         tr.scale_x = read_float_le(unpacked_data);
+        unpacked_data += 4;
         count += 4;
         tr.scale_y = read_float_le(unpacked_data);
+        unpacked_data += 4;
         count += 4;
         tr.scale_z = read_float_le(unpacked_data);
+        unpacked_data += 4;
         count += 4;
         unsigned flags = *unpacked_data++;
         count++;
@@ -78,11 +98,41 @@ void doodads_parser::aggregate() {
         tr.solid = flags > 1;
         tr.health = *unpacked_data++;
         count++;
-        tr.item_id = read_int_le(unpacked_data);
-        count += 4;
-        tr.item_count = read_int_le(unpacked_data);
-        count += 4;
+        if (version == 8) {
+            tr.item_id = read_int_le(unpacked_data);
+            unpacked_data += 4;
+            count += 4;
+            tr.item_count = read_int_le(unpacked_data);
+            unpacked_data += 4;
+            count += 4;
+        }
         tr.id = read_int_le(unpacked_data);
+        unpacked_data += 4;
+        count += 4;
+        trees.push_back(tr);
+        std::cout << tr.id << " " << tr.tree_id << std::endl;
+    }
+    int format = read_int_le(unpacked_data);
+    assert (format == 0);
+    unpacked_data += 4;
+    count += 4;
+    special_doodads = read_int_le(unpacked_data);
+    unpacked_data += 4;
+    count += 4;
+    std::cout << special_doodads << " doods" << std::endl;
+    for (int i = 0; i < special_doodads; i++) {
+        special_doodads_entry sde;
+        sde.id = std::string((char *) unpacked_data, 4);
+        unpacked_data += 4;
+        count += 4;
+        sde.Z = read_int_le(unpacked_data);
+        unpacked_data += 4;
+        count += 4;
+        sde.X = read_int_le(unpacked_data);
+        unpacked_data += 4;
+        count += 4;
+        sde.Y = read_int_le(unpacked_data);
+        unpacked_data += 4;
         count += 4;
     }
     unpacked_data -= count;// for safe deleteing
@@ -105,4 +155,8 @@ void doodads_parser::read_block(const std::vector<unsigned int> &offset_table, i
 
 doodads_parser::~doodads_parser() {
     delete[] unpacked_data;
+    delete _doodads_csv_parser;
+    delete _destructable_unit_parser;
 }
+
+

@@ -36,14 +36,23 @@ int16_t read_sint_16_le(unsigned char *data) {
 
 
 unsigned read_int_le(unsigned char *bytes) {
-    int sum = 0;
+    unsigned sum = 0;
     sum += bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24);
     return sum;
 }
 
 float read_float_le(unsigned char *bytes) {
     float sum = 0;
-    sum += bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24);
+    union
+    {
+        float f;
+        char b[4];
+    } dst;
+    dst.b[0] = bytes[0];
+    dst.b[1] = bytes[1];
+    dst.b[2] = bytes[2];
+    dst.b[3] = bytes[3];
+    sum = dst.f;
     return sum;
 }
 
