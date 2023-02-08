@@ -104,7 +104,7 @@ void enviroment_file_map_parser::aggregate() {
         memcpy(tileset_table[i], unpacked_data, 4);
         std::string id(tileset_table[i], 4);
         tileset_textures[id] = png::image<png::rgb_pixel>(
-                "/home/zealot/CLionProjects/War3_Map_Parser/assets/" + parser->name(id));
+                "/home/zealot/CLionProjects/War3_Map_Parser/assets/" + parser->name(id) + ".png");
         unpacked_data += 4;
         count += 4;
     }

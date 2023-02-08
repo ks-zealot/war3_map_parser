@@ -88,12 +88,18 @@ int csv_parser<T>::get_int_or_blank() {
 
 template<typename T>
 std::string csv_parser<T>::name(std::string &id) {
-    if (!_map.contains(id)) {
-        throw std::runtime_error("could not found texture");
-    }
     T &entry = _map[id];
-    std::string s = entry.dir + "\\" + entry.file + ".png";
+    std::string s = entry.dir + std::filesystem::path::preferred_separator + entry.file;
     return fix_file_separator(s);
+}
+
+template<typename T>
+bool csv_parser<T>::has(std::string &id) {
+    return _map.contains(id);
+}
+template<typename T>
+T& csv_parser<T>::get(std::string &id) {
+    return _map[id];
 }
 
 template

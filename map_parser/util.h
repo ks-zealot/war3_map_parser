@@ -7,12 +7,18 @@
 
 #include <fstream>
 
-unsigned read_int_le(std::ifstream& map) ;
-unsigned read_int_le( unsigned char* data) ;
-float read_float_le( unsigned char* data) ;
-uint16_t read_int_16_le(std::ifstream& map) ;
-uint16_t read_int_16_le( unsigned char* data) ;
-int16_t read_sint_16_le( unsigned char* data) ;
+unsigned read_int_le(std::ifstream &map);
+
+unsigned read_int_le( char *data);
+
+float read_float_le( char *data);
+
+uint16_t read_int_16_le(std::ifstream &map);
+
+uint16_t read_int_16_le( char *data);
+
+int16_t read_sint_16_le( char *data);
+
 // Swaps a signed 16-bit integer
 int16_t SwapInt16(uint16_t val);
 
@@ -32,14 +38,13 @@ int64_t SwapInt64(uint64_t val);
 uint64_t SwapUInt64(uint64_t val);
 
 // Swaps array of unsigned 16-bit integers
-void ConvertUInt16Buffer(void * ptr, size_t length);
+void ConvertUInt16Buffer(void *ptr, size_t length);
 
 // Swaps array of unsigned 32-bit integers
-void ConvertUInt32Buffer(void * ptr, size_t length);
+void ConvertUInt32Buffer(void *ptr, size_t length);
 
 // Swaps array of unsigned 64-bit integers
-void ConvertUInt64Buffer(void * ptr, size_t length);
-
+void ConvertUInt64Buffer(void *ptr, size_t length);
 
 
 #endif //WAR3_MAP_PARSER_UTIL_H

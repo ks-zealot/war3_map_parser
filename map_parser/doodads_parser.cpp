@@ -6,10 +6,13 @@
 #include <vector>
 #include <cstring>
 #include <cassert>
+#include <sstream>
+#include <filesystem>
 #include "doodads_parser.h"
 #include "../decompressors/abstract_decompressor.h"
 #include "util.h"
 #include "../data_objects/war3_inner_object/special_doodads_entry.h"
+#include "../mdx_parser/mdx_parser.h"
 
 void doodads_parser::parse() {
     _doodads_csv_parser->parse();
@@ -62,9 +65,7 @@ void doodads_parser::aggregate() {
     std::cout << numbers_of_trees << " trees" << std::endl;
     for (int i = 0; i < numbers_of_trees; i++) {
         tree_entry tr;
-        if (i == 1852) {
-            std::cout << std::endl;
-        }
+
         tr.tree_id = std::string((char *) unpacked_data, 4);
         unpacked_data += 4;
         count += 4;
@@ -109,9 +110,30 @@ void doodads_parser::aggregate() {
         tr.id = read_int_le(unpacked_data);
         unpacked_data += 4;
         count += 4;
+        std::stringstream ss;
+        if (_destructable_unit_parser->has(tr.tree_id)) {
+            destructable_unit_entry &de = _destructable_unit_parser->get(tr.tree_id);
+
+            ss << _destructable_unit_parser->fix_file_separator(de.dir) << std::filesystem::path::preferred_separator << de.file;
+
+            if (de.num_var != 1) {
+                ss<< std::filesystem::path::preferred_separator << de.file;
+                ss << tr.variation;
+            }
+        } else {
+            doodads_entry &de = _doodads_csv_parser->get(tr.tree_id);
+            ss << _destructable_unit_parser->fix_file_separator(de.dir) << std::filesystem::path::preferred_separator << de.file ;
+            if (de.num_var != 1) {
+                ss<< std::filesystem::path::preferred_separator << de.file;
+                ss << tr.variation;
+            }
+        }
+
+        ss << ".mdx";
         trees.push_back(tr);
-        std::cout << tr.id << " " << tr.tree_id << std::endl;
     }
+    mdx_parser _mdx_parser("/home/zealot/CLionProjects/War3_Map_Parser/assets/Doodads/Terrain/LordaeronTree/LordaeronTree0.mdx");
+    _mdx_parser.parse();
     int format = read_int_le(unpacked_data);
     assert (format == 0);
     unpacked_data += 4;

@@ -45,7 +45,7 @@ add_executable(War3_Map_Parser main.cpp
         data_objects/war3_inner_object/tileset_entry.cpp
         data_objects/war3_inner_object/tileset_entry.h
         data_objects/war3_inner_object/special_doodads_entry.h
-        file_utils/terrain_csv_parser.h file_utils/terrain_csv_parser.cpp file_utils/destructable_unit_parser.h file_utils/destructable_unit_parser.cpp file_utils/csv_parser_structs.h)
+        file_utils/terrain_csv_parser.h file_utils/terrain_csv_parser.cpp file_utils/destructable_unit_parser.h file_utils/destructable_unit_parser.cpp file_utils/csv_parser_structs.h mdx_parser/mdx_parser.h mdx_parser/mdx_parser.cpp mdx_parser/mdx_handlers/handler.h mdx_parser/mdx_handlers/vers_handler.h mdx_parser/mdx_handlers/vers_handler.cpp mdx_parser/mdx_handlers/modl_handler.h mdx_parser/mdx_handlers/modl_handler.cpp mdx_parser/mdx_handlers/seqs_handler.h mdx_parser/mdx_handlers/seqs_handler.cpp mdx_parser/data/extent.h mdx_parser/mdx_handlers/mtls_handler.h mdx_parser/mdx_handlers/mtls_handler.cpp mdx_parser/mdx_handlers/handler.cpp mdx_parser/mdx_handlers/track_handlers/kmtf_handler.h mdx_parser/data/track.h mdx_parser/mdx_handlers/track_handlers/kmtf_handler.cpp mdx_parser/mdx_handlers/track_handlers/track_handler.h mdx_parser/mdx_handlers/track_handlers/track_handler.cpp)
 target_link_libraries(War3_Map_Parser PRIVATE BZip2::BZip2 ZLIB::ZLIB  ${PNG_LIBRARIES}  )
 add_executable(test_tileset data_objects/war3_inner_object/tileset_entry.h map_parser/util.cpp test/test_tileset.cpp data_objects/parser_inner_object/Vertex.h )
 target_link_libraries(test_tileset)

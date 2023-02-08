@@ -17,7 +17,12 @@ public:
 
     virtual void parse() = 0;
 
-    std::string name(std::string& id);
+    bool has (std::string& id);
+
+   virtual std::string name(std::string& id);
+
+   T& get(std::string& id);
+    std::string fix_file_separator(std::string &s);
 
 protected:
     std::ifstream csv;
@@ -36,12 +41,14 @@ protected:
 
     void read_vector(std::vector<std::string> &s);
 
-    std::string fix_file_separator(std::string &s);
+
 
     void skip_header();
 
     std::unordered_map<std::string, T> _map;
 };
+
+
 
 
 #endif //WAR3_MAP_PARSER_CSV_PARSER_H
