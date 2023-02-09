@@ -24,10 +24,6 @@ public:
     virtual void aggregate() override;
     virtual ~doodads_parser();
 private:
-    void read_block(const std::vector<unsigned int> &offset_table, int i);
-
-    unsigned char *unpacked_data;
-
     unsigned int numbers_of_trees;
     unsigned int special_doodads;
 

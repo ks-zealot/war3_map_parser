@@ -11,13 +11,9 @@
 
 class track_handler {
 public:
-    track_handler(char *data, int size) : data(data) {};
+    track_handler(char *data) : data(data) {};
 
     virtual void parse();
-
-    virtual int get_tag() = 0;
-
-    virtual void parse_track() = 0;
 
 protected:
     char *data;
@@ -29,6 +25,9 @@ protected:
     // 3: bezier
     unsigned global_sequece_id;
 
+
+    virtual void parse_track() = 0;
+    virtual int get_tag() = 0;
 
 };
 

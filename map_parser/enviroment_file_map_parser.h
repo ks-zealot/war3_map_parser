@@ -25,10 +25,9 @@ public:
 
     virtual void aggregate() override;
 
-    void read_block(const std::vector<unsigned int> &offset_table, int i);
 
 private:
-    unsigned char *unpacked_data;
+
     std::vector<tileset_entry> tilesets;
     std::vector<Vertex> verticies;
     std::vector<TexCoord> texcoords;
@@ -38,7 +37,7 @@ private:
 
     unsigned char main_tileset;
     unsigned int custom_tilesets_flag;
-    char **tileset_table;
+    char **tileset_table;//todo переделать  в мап
     std::unordered_map<std::string, png::image<png::rgb_pixel >> tileset_textures;
     png::image<png::rgb_pixel > result_texture;
     char **cliff_tileset_table;

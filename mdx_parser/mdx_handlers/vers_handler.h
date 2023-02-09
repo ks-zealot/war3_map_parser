@@ -6,7 +6,6 @@
 #define WAR3_MAP_PARSER_VERS_HANDLER_H
 
 
-#include "../data/version.h"
 #include "handler.h"
 
 class vers_handler : public handler{

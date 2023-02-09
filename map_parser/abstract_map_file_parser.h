@@ -11,13 +11,20 @@
 
 class abstract_map_file_parser {
 public:
-    virtual void parse() = 0;
+    virtual void parse() ;
+
     virtual void aggregate() = 0;
-    abstract_map_file_parser(block_table_entry& entry,std::ifstream& map) : bp(entry), _map(map) {}
+
+    abstract_map_file_parser(block_table_entry &entry, std::ifstream &map) : bp(entry), _map(map) {}
+
     virtual ~abstract_map_file_parser();
+
 protected:
-    block_table_entry& bp;
-    std::ifstream & _map;
+    char *unpacked_data;
+    block_table_entry &bp;
+    std::ifstream &_map;
+
+    void read_block(const std::vector<unsigned int> &offset_table, int i);
 };
 
 

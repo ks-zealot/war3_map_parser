@@ -10,14 +10,21 @@
 
 #define KMTF 0x4B4D5446
 
-class kmtf_handler  : public track_handler{
+class kmtf_handler : public track_handler {
 public:
+    kmtf_handler(char *data) : track_handler(data) {};
+
+
+    const inline std::vector<kmtf_track> get_tracks() {
+        return tracks;
+    }
+
+private:
     int get_tag() override;
 
     void parse_track() override;
 
-private:
-    std::vector<kmtf_truck> tracks;
+    std::vector<kmtf_track> tracks;
 
 };
 

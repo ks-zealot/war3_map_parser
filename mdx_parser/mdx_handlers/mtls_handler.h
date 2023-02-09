@@ -7,6 +7,8 @@
 
 
 #include "handler.h"
+#include "../data/track.h"
+
 struct layer  {
     unsigned inclusiveSize;
     unsigned filterMode; // 0: none
@@ -36,6 +38,8 @@ struct layer  {
 //        float fresnelTeamColor
 //    }
 
+std::vector<kmtf_track> kmtf_tracks;
+std::vector<kmta_track> kmta_tracks;
 
 //    KMTF: uint32 textureId
 //    KMTA: float alpha

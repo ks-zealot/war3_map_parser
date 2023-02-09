@@ -29,20 +29,19 @@ uint16_t read_int_16_le(std::ifstream &map) {
     return dst.i;
 }
 
-uint16_t read_int_16_le(unsigned char *data) {
-    uint16_t sum = 0;
-    sum += data[0] | (data[1] << 8);
-    return sum;
+uint16_t read_int_16_le(char *&bytes) {
+    union {
+        uint16_t i;
+        char b[2];
+    } dst;
+    dst.b[0] = bytes[0];
+    dst.b[1] = bytes[1];
+    bytes+=2;
+    return dst.i;
 }
 
-int16_t read_sint_16_le( char *data) {
-    int16_t sum = 0;
-    sum += data[0] | (data[1] << 8);
-    return sum;
-}
 
-
-unsigned read_int_le( char *bytes) {
+unsigned read_int_le(char *&bytes) {
     union {
         unsigned i;
         char b[4];
@@ -51,10 +50,11 @@ unsigned read_int_le( char *bytes) {
     dst.b[1] = bytes[1];
     dst.b[2] = bytes[2];
     dst.b[3] = bytes[3];
+    bytes+=4;
     return dst.i;
 }
 
-float read_float_le( char *bytes) {
+float read_float_le(char *&bytes) {
     float sum = 0;
     union {
         float f;
@@ -65,6 +65,7 @@ float read_float_le( char *bytes) {
     dst.b[2] = bytes[2];
     dst.b[3] = bytes[3];
     sum = dst.f;
+    bytes+=4;
     return sum;
 }
 
@@ -107,7 +108,7 @@ uint64_t SwapUInt64(uint64_t val) {
 // Swaps array of unsigned 16-bit integers
 void ConvertUInt16Buffer(void *ptr, size_t length) {
     uint16_t *buffer = (uint16_t *) ptr;
-    uint32_t nElements = (uint32_t)(length / sizeof(uint16_t));
+    uint32_t nElements = (uint32_t) (length / sizeof(uint16_t));
 
     while (nElements-- > 0) {
         *buffer = SwapUInt16(*buffer);
@@ -118,7 +119,7 @@ void ConvertUInt16Buffer(void *ptr, size_t length) {
 // Swaps array of unsigned 32-bit integers
 void ConvertUInt32Buffer(void *ptr, size_t length) {
     uint32_t *buffer = (uint32_t *) ptr;
-    uint32_t nElements = (uint32_t)(length / sizeof(uint32_t));
+    uint32_t nElements = (uint32_t) (length / sizeof(uint32_t));
 
     while (nElements-- > 0) {
         *buffer = SwapUInt32(*buffer);
@@ -129,7 +130,7 @@ void ConvertUInt32Buffer(void *ptr, size_t length) {
 // Swaps array of unsigned 64-bit integers
 void ConvertUInt64Buffer(void *ptr, size_t length) {
     uint64_t *buffer = (uint64_t *) ptr;
-    uint32_t nElements = (uint32_t)(length / sizeof(uint64_t));
+    uint32_t nElements = (uint32_t) (length / sizeof(uint64_t));
 
     while (nElements-- > 0) {
         *buffer = SwapUInt64(*buffer);

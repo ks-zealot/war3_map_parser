@@ -8,12 +8,9 @@
 
 void track_handler::parse() {
     tag = read_int_le(data);
-    data += 4;
     assert(tag = get_tag());
     tracks_count  = read_int_le(data);
-    data +=4;
     interpolation_type = read_int_le(data);
-    data+=4;
     global_sequece_id = read_int_le(data);
     for (int i =0; i < tracks_count; i++) {
         parse_track();
