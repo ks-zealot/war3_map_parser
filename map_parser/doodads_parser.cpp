@@ -33,6 +33,7 @@ void doodads_parser::aggregate() {
     for (int i = 0; i < numbers_of_trees; i++) {
         tree_entry tr;
         tr.tree_id = std::string((char *) unpacked_data, 4);
+        unpacked_data +=4;
         tr.variation = read_int_le(unpacked_data);
         tr.x = read_float_le(unpacked_data);
         tr.y = read_float_le(unpacked_data);

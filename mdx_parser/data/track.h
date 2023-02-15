@@ -61,6 +61,17 @@ struct track {
     T inTan = T(-1);
     T outTan = T(-1);
 };
+
+template<typename T>
+struct track_data {
+    unsigned interpolationType; // 0: none
+    // 1: linear
+    // 2: hermite
+    // 3: bezier
+    unsigned globalSequenceId;
+    std::vector<T> tracks;
+};
+
 struct kmtf_track : public track<int> {
 
 };
@@ -80,6 +91,28 @@ struct kgrt_track : public track<rotation> {
 
 };
 struct kgsc_track : public track<scaling> {
+
+};
+
+struct kmtf_track_data : public track_data<kmtf_track> {
+
+};
+struct kmta_track_data : public track_data<kmta_track> {
+
+};
+struct kgao_track_data : public track_data<kgao_track> {
+
+};
+struct kgac_track_data : public track_data<kgac_track> {
+
+};
+struct kgtr_track_data : public track_data<kgtr_track> {
+
+};
+struct kgrt_track_data : public track_data<kgrt_track> {
+
+};
+struct kgsc_track_data : public track_data<kgsc_track> {
 
 };
 #endif //WAR3_MAP_PARSER_TRACK_H

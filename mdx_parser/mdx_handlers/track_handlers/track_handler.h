@@ -18,7 +18,6 @@ public:
 protected:
     char *&data;
     unsigned& count;
-    unsigned tag;
     unsigned tracks_count;
     unsigned interpolation_type;// 0: none
     // 1: linear

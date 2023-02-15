@@ -16,16 +16,26 @@ void geoa_handler::parse() {
         geo.color = color(read_float_le(data, local_count), read_float_le(data, local_count),
                           read_float_le(data, local_count));
         geo.geosetId = read_int_le(data, local_count);
-        if (local_count < geo.inclusiveSize) {
-            kgao_handler _kgao_handler(data, local_count);
-            _kgao_handler.parse();
-            geo.kgao_tracks = _kgao_handler.get_tracks();
+        while (local_count < geo.inclusiveSize) {
+            unsigned tag = read_int_le(data, local_count);
+            switch (tag) {
+                case KGAO: {
+                    kgao_handler _kgao_handler(data, local_count);
+                    _kgao_handler.parse();
+                    geo.kgao_track_data = _kgao_handler.get_tracks();
+                    break;
+                }
+
+                case KGAC: {
+                    kgac_handler _kgac_handler(data, local_count);
+                    _kgac_handler.parse();
+                    geo.kgac_track_data = _kgac_handler.get_tracks();
+                    break;
+                }
+
+            }
         }
-        if (local_count < geo.inclusiveSize) {
-            kgac_handler _kgac_handler(data, local_count);
-            _kgac_handler.parse();
-            geo.kgac_tracks = _kgac_handler.get_tracks();
-        }
+
         count += geo.inclusiveSize;
     }
 

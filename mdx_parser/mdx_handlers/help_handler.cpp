@@ -21,27 +21,34 @@ void help_handler::parse() {
         n.objectId = read_int_le(data, local_count);
         n.parentId = read_int_le(data, local_count);
         n.flags = read_int_le(data, local_count);
-        if (local_count < n.inclusiveSize) {
-            kgtr_handler _kgtr_handler(data, local_count);
-            _kgtr_handler.parse();
-            n.kgtr_tracks = _kgtr_handler.get_tracks();
+        while (local_count < n.inclusiveSize) {
+            unsigned tag = read_int_le(data, local_count);
+            switch (tag) {
+                case KGTR: {
+                    kgtr_handler _kgtr_handler(data, local_count);
+                    _kgtr_handler.parse();
+                    n.kgtr_track_data = _kgtr_handler.get_track_data();
+                    break;
+                }
+
+                case KGRT: {
+                    kgrt_handler _kgrt_handler(data, local_count);
+                    _kgrt_handler.parse();
+                    n.kgrt_track_data = _kgrt_handler.get_track_data();
+                    break;
+                }
+
+                case KGSC: {
+                    kgsc_handler _kgsc_handler(data, local_count);
+                    _kgsc_handler.parse();
+                    n.kgsc_track_data = _kgsc_handler.get_track_data();
+                    break;
+                }
+
+            }
         }
 
-        if (local_count < n.inclusiveSize) {
-            kgrt_handler _kgrt_handler(data, local_count);
-            _kgrt_handler.parse();
-            n.kgrt_tracks = _kgrt_handler.get_tracks();
-        }
 
-        if (local_count < n.inclusiveSize) {
-            kgsc_handler _kgsc_handler(data, local_count);
-            _kgsc_handler.parse();
-            n.kgsc_tracks = _kgsc_handler.get_tracks();
-        }
-
-        kgsc_handler _kgsc_handler(data, local_count);
-        _kgsc_handler.parse();
-        n.kgsc_tracks = _kgsc_handler.get_tracks();
         h.node = n;
         count += n.inclusiveSize;
     }

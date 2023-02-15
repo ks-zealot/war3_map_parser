@@ -16,8 +16,8 @@ struct geoset_animation {
     unsigned flags;
     color color;
     unsigned geosetId;
-    std::vector<kgao_track> kgao_tracks;
-    std::vector<kgac_track> kgac_tracks;
+    kgao_track_data kgao_track_data;
+    kgac_track_data kgac_track_data;
 //(KGAO)
 //        (KGAC)
 };

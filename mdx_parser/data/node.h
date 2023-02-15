@@ -36,9 +36,9 @@ struct node {
     // 0x40000: unfogged
     // 0x80000: model space
     // 0x100000: xy quad
-    std::vector<kgtr_track> kgtr_tracks;
-    std::vector<kgrt_track> kgrt_tracks;
-    std::vector<kgsc_track> kgsc_tracks;
+    kgtr_track_data kgtr_track_data;
+    kgrt_track_data kgrt_track_data;
+    kgsc_track_data kgsc_track_data;
 //    (KGTR)
 //            (KGRT)
 //            (KGSC)

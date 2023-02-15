@@ -17,5 +17,11 @@ void kgao_handler::parse_track() {
         truck.inTan = read_float_le(data, count);
         truck.outTan = read_float_le(data, count);
     }
-    tracks.push_back(truck);
+    track_data.tracks.push_back(truck);
+}
+
+void kgao_handler::parse() {
+    track_handler::parse();
+    track_data.interpolationType = interpolation_type;
+    track_data.globalSequenceId = global_sequece_id;
 }

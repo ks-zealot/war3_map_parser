@@ -13,16 +13,18 @@ class kgac_handler : public track_handler {
 public:
     kgac_handler(char *&data, unsigned& count) : track_handler(data, count) {};
 
-    const inline std::vector<kgac_track> get_tracks() {
-        return tracks;
+    const inline kgac_track_data get_tracks() {
+        return track_data;
     }
+
+    void parse() override;
 
 private:
     int get_tag() override;
 
     void parse_track() override;
 
-    std::vector<kgac_track> tracks;
+   kgac_track_data track_data;
 };
 
 #endif //WAR3_MAP_PARSER_KGAC_HANDLER_H

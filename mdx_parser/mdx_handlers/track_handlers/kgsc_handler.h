@@ -12,19 +12,21 @@
 
 class kgsc_handler : public track_handler {
 public:
-    kgsc_handler(char *&data, unsigned & count) : track_handler(data, count) {};
+    kgsc_handler(char *&data, unsigned &count) : track_handler(data, count) {};
 
 
-    const inline std::vector <kgsc_track> get_tracks() {
-        return tracks;
+    const inline kgsc_track_data get_track_data() {
+        return track_data;
     }
+
+    void parse() override;
 
 private:
     int get_tag() override;
 
     void parse_track() override;
 
-    std::vector <kgsc_track> tracks;
+    kgsc_track_data track_data;
 };
 
 

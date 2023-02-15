@@ -8,23 +8,26 @@
 
 #include "track_handler.h"
 
-#define KMTF 1128351563
+#define KMTF 1179929931
 
 class kmtf_handler : public track_handler {
 public:
     kmtf_handler(char *&data, unsigned& count) : track_handler(data, count) {};
 
 
-    const inline std::vector<kmtf_track> get_tracks() {
-        return tracks;
+    const inline kmtf_track_data get_track_data() {
+        return track_data;
     }
+
+    void parse() override;
 
 private:
     int get_tag() override;
 
+
     void parse_track() override;
 
-    std::vector<kmtf_track> tracks;
+    kmtf_track_data track_data;
 
 };
 

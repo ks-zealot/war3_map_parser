@@ -17,5 +17,11 @@ void kgrt_handler::parse_track() {
         truck.inTan = rotation(read_float_le(data, count), read_float_le(data, count), read_float_le(data, count), read_float_le(data, count));
         truck.outTan = rotation(read_float_le(data, count), read_float_le(data, count), read_float_le(data, count), read_float_le(data, count));
     }
-    tracks.push_back(truck);
+    track_data.tracks.push_back(truck);
+}
+
+void kgrt_handler::parse() {
+    track_handler::parse();
+    track_data.interpolationType = interpolation_type;
+    track_data.globalSequenceId = global_sequece_id;
 }

@@ -17,5 +17,11 @@ void kmta_handler::parse_track() {
         track.inTan = read_float_le(data, count);
         track.outTan = read_float_le(data, count);
     }
-    tracks.push_back(track);
+    track_data.tracks.push_back(track);
+}
+
+void kmta_handler::parse() {
+    track_handler::parse();
+    track_data.interpolationType = interpolation_type;
+    track_data.globalSequenceId = global_sequece_id;
 }

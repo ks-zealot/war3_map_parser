@@ -29,16 +29,25 @@ void mtls_handler::parse() {
             l.textureAnimationId = read_int_le(data, local_count);
             l.coordId = read_int_le(data, local_count);
             l.alpha = read_float_le(data, local_count);
-            if (local_count < l.inclusiveSize) {
-                kmta_handler _kmta_handler(data, local_count);
-                _kmta_handler.parse();
-                l.kmta_tracks = _kmta_handler.get_tracks();
+            while (local_count < l.inclusiveSize) {
+                unsigned tag = read_int_le(data, local_count);
+                switch (tag) {
+                    case KMTA: {
+                        kmta_handler _kmta_handler(data, local_count);
+                        _kmta_handler.parse();
+                        l.kmta_tracks = _kmta_handler.get_track_data();
+                        break;
+                    }
+
+                    case KMTF: {
+                        kmtf_handler _kmtf_handler(data, local_count);
+                        _kmtf_handler.parse();
+                        l.kmtf_tracks = _kmtf_handler.get_track_data();
+                        break;
+                    }
+                }
             }
-            if (local_count < l.inclusiveSize) {
-                kmtf_handler _kmtf_handler(data, local_count);
-                _kmtf_handler.parse();
-                l.kmtf_tracks = _kmtf_handler.get_tracks();
-            }
+
 
             count += l.inclusiveSize;
             m.layers.push_back(l);

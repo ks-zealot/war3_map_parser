@@ -7,8 +7,6 @@
 #include "../../../map_parser/util.h"
 
 void track_handler::parse() {
-    tag = read_int_le(data, count);
-    assert(tag == get_tag());
     tracks_count = read_int_le(data, count);
     interpolation_type = read_int_le(data, count);
     global_sequece_id = read_int_le(data, count);

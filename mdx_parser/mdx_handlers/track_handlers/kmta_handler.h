@@ -15,14 +15,19 @@ public:
     kmta_handler(char *&data, unsigned& count) : track_handler(data, count) {};
 
 
-    const inline std::vector<kmta_track> get_tracks() {
-        return tracks;
+    const inline kmta_track_data get_track_data() {
+        return track_data;
     }
+
+    void parse() override;
+
 private:
     int get_tag() override;
 
     void parse_track() override;
-    std::vector<kmta_track> tracks;
+
+    kmta_track_data track_data;
+
 };
 
 

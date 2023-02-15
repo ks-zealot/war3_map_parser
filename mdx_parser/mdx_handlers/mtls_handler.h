@@ -9,7 +9,7 @@
 #include "handler.h"
 #include "../data/track.h"
 
-struct layer  {
+struct layer {
     unsigned inclusiveSize;
     unsigned filterMode; // 0: none
     // 1: transparent
@@ -38,8 +38,8 @@ struct layer  {
 //        float fresnelTeamColor
 //    }
 
-std::vector<kmtf_track> kmtf_tracks;
-std::vector<kmta_track> kmta_tracks;
+    kmtf_track_data kmtf_tracks;
+    kmta_track_data kmta_tracks;
 
 //    KMTF: uint32 textureId
 //    KMTA: float alpha
@@ -55,7 +55,7 @@ std::vector<kmta_track> kmta_tracks;
 };
 
 struct material {
-        unsigned inclusiveSize;
+    unsigned inclusiveSize;
     unsigned priorityPlane;
     unsigned flags;
 
@@ -65,8 +65,9 @@ struct material {
 
 //        char[4] "LAYS";
     unsigned layersCount;
-    std::vector<layer>  layers;
+    std::vector<layer> layers;
 };
+
 class mtls_handler : public handler {
 public:
     mtls_handler(char *data, unsigned size) : handler(data, size) {};
