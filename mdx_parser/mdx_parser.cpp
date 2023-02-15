@@ -15,6 +15,7 @@
 #include "mdx_handlers/bone_handler.h"
 #include "mdx_handlers/help_handler.h"
 #include "mdx_handlers/pivt_handler.h"
+#include "mdx_handlers/modl_handler.h"
 
 void mdx_parser::parse() {
     char MDLX[4];
@@ -54,7 +55,12 @@ handler *mdx_parser::get_handler(unsigned id, char *data, int size) {
             return new bone_handler(data, size);
         case HELP:
             return new help_handler(data, size);
+        case MODL:
+            return new modl_handler(data, size);
         case PIVT:
             return new pivt_handler(data, size);
     }
 }
+
+
+ 

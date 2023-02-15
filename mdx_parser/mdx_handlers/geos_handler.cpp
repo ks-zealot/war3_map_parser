@@ -12,6 +12,7 @@ void geos_handler::parse() {
         geoset g;
         g.inclusiveSize = read_int_le(data);
         std::string VRTX = std::string(data, 4);
+        data += 4;
         assert(VRTX == "VRTX");
         g.vertexCount = read_int_le(data);
         g.vertexPositions.reserve(g.vertexCount * 3);
@@ -20,6 +21,7 @@ void geos_handler::parse() {
         }
         std::string NRMS = std::string(data, 4);
         assert(NRMS == "NRMS");
+        data += 4;
         g.normalCount = read_int_le(data);
         g.vertexNormals.reserve(g.normalCount * 3);
         for (int i = 0; i < g.normalCount * 3; i++) {
@@ -27,6 +29,7 @@ void geos_handler::parse() {
         }
         std::string PTYP = std::string(data, 4);
         assert(PTYP == "PTYP");
+        data += 4;
         g.faceTypeGroupsCount = read_int_le(data);
         g.faceTypeGroups.reserve(g.faceTypeGroupsCount);
         for (int i = 0; i < g.faceTypeGroupsCount; i++) {
@@ -34,6 +37,7 @@ void geos_handler::parse() {
         }
         std::string PCNT = std::string(data, 4);
         assert(PCNT == "PCNT");
+        data += 4;
         g.faceGroupsCount = read_int_le(data);
         g.faceGroups.reserve(g.faceGroupsCount);
         for (int i = 0; i < g.faceGroupsCount; i++) {
@@ -41,26 +45,30 @@ void geos_handler::parse() {
         }
         std::string PVTX = std::string(data, 4);
         assert(PVTX == "PVTX");
+        data += 4;
         g.facesCount = read_int_le(data);
         g.faces.reserve(g.facesCount);
         for (int i = 0; i < g.facesCount; i++) {
-            g.faces.push_back(read_int_le(data));
+            g.faces.push_back(read_int_16_le(data));
         }
         std::string GNDX = std::string(data, 4);
         assert(GNDX == "GNDX");
+        data += 4;
         g.vertexGroupsCount = read_int_le(data);
         for (int i = 0; i < g.vertexGroupsCount; i++) {
             g.vertexGroups.push_back(*data++);
         }
         std::string MTGC = std::string(data, 4);
         assert(MTGC == "MTGC");
+        data += 4;
         g.matrixGroupsCount = read_int_le(data);
         g.matrixGroups.reserve(g.matrixGroupsCount);
         for (int i = 0; i < g.matrixGroupsCount; i++) {
             g.matrixGroups.push_back(read_int_le(data));
         }
         std::string MATS = std::string(data, 4);
-        assert(MTGC == "MATS");
+        assert(MATS == "MATS");
+        data += 4;
         g.matrixIndicesCount = read_int_le(data);
         g.matrixIndices.reserve(g.matrixIndicesCount);
         for (int i = 0; i < g.matrixIndicesCount; i++) {
@@ -76,12 +84,14 @@ void geos_handler::parse() {
         }
         std::string UVAS = std::string(data, 4);
         assert(UVAS == "UVAS");
+        data += 4;
         g.textureCoordinateSetsCount = read_int_le(data);
         g.textureCoordinateSets.reserve(g.textureCoordinateSetsCount);
         for (int i = 0; i < g.textureCoordinateSetsCount; i++) {
             g.textureCoordinateSets.push_back(calculate_texture_set(data));
         }
         geosets.push_back(g);
+        count += g.inclusiveSize;
     }
 }
 
@@ -102,6 +112,7 @@ extent geos_handler::calculate_extent(char *&data) {
 texture_coordinate_set geos_handler::calculate_texture_set(char *&data) {
     std::string UVBS = std::string(data, 4);
     assert(UVBS == "UVBS");
+    data += 4;
     texture_coordinate_set ts;
     ts.count = read_int_le(data);
     ts.texture_coordinates.reserve(ts.count * 2);

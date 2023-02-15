@@ -45,7 +45,7 @@ struct scaling {
 struct rotation {
     rotation() : rotation(-1) {};
 
-    rotation(float f) : w(f), x(f), y(f), z(z) {};
+    rotation(float f) : w(f), x(f), y(f), z(f) {};
 
     rotation(float w, float x, float y, float z) : w(w), x(x), y(y), z(z) {};
     float w;

@@ -9,13 +9,19 @@
 
 unsigned read_int_le(std::ifstream &map);
 
+uint16_t read_int_16_le(std::ifstream &map);
+
 unsigned read_int_le(char *&data);
 
 float read_float_le(char *&data);
 
-uint16_t read_int_16_le(std::ifstream &map);
-
 uint16_t read_int_16_le(char *&data);
+
+unsigned read_int_le(char *&data, unsigned & count);
+
+float read_float_le(char *&data, unsigned & count);
+
+uint16_t read_int_16_le(char *&data, unsigned & count);
 
 
 // Swaps a signed 16-bit integer

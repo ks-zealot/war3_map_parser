@@ -11,11 +11,11 @@ int kgac_handler::get_tag() {
 
 void kgac_handler::parse_track() {
     kgac_track truck;
-    truck.frame = read_int_le(data);
-    truck.value = color(read_float_le(data), read_float_le(data), read_float_le(data));
+    truck.frame = read_int_le(data, count);
+    truck.value = color(read_float_le(data, count), read_float_le(data, count), read_float_le(data, count));
     if (interpolation_type > 0) {
-        truck.inTan = color(read_float_le(data), read_float_le(data), read_float_le(data));
-        truck.outTan = color(read_float_le(data), read_float_le(data), read_float_le(data));
+        truck.inTan = color(read_float_le(data, count), read_float_le(data, count), read_float_le(data, count));
+        truck.outTan = color(read_float_le(data, count), read_float_le(data, count), read_float_le(data, count));
     }
     tracks.push_back(truck);
 }

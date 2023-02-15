@@ -10,16 +10,16 @@
 #include <unordered_map>
 #include "mdx_handlers/handler.h"
 
-#define VERS 0x56455253
-#define MODL 0x4D4F444C
-#define SEQS 0x53455153
-#define MTLS 0x4D544C53
-#define TEXS 0x54455853
-#define GEOS 0x47454F53
-#define GEOA 0x47454F41
-#define BONE 0x424F4E45
-#define HELP 0x48454C50
-#define PIVT 0x50495654
+#define VERS 1397900630
+#define MODL 1279545165
+#define SEQS 1397835091
+#define MTLS 1397511245
+#define TEXS 1398293844
+#define GEOS 1397704007
+#define GEOA 1095714119
+#define BONE 1162760002
+#define HELP 1347175752
+#define PIVT 1414941008
 
 class mdx_parser {
 public:

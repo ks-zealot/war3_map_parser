@@ -7,7 +7,6 @@
 
 
 #include "handler.h"
-#include "../data/color.h"
 #include "track_handlers/kgao_handler.h"
 #include "track_handlers/kgac_handler.h"
 
@@ -28,6 +27,7 @@ public:
     geoa_handler(char *data, unsigned size) : handler(data, size) {};
 
     virtual void parse() override;
+
 
 private:
     std::vector<geoset_animation> geosets;

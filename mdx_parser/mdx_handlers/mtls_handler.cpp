@@ -21,19 +21,25 @@ void mtls_handler::parse() {
         unsigned layer_count = read_int_le(data);
         for (int i = 0; i < layer_count; i++) {
             layer l;
-            l.inclusiveSize = read_int_le(data);
-            l.filterMode = read_int_le(data);
-            l.shadingFlags = read_int_le(data);
-            l.textureId = read_int_le(data);
-            l.textureAnimationId = read_int_le(data);
-            l.coordId = read_int_le(data);
-            l.alpha = read_float_le(data);
-            kmta_handler _kmta_handler(data);
-            _kmta_handler.parse();
-            l.kmta_tracks = _kmta_handler.get_tracks();
-            kmtf_handler _kmtf_handler(data);
-            _kmtf_handler.parse();
-            l.kmtf_tracks = _kmtf_handler.get_tracks();
+            unsigned local_count = 0;
+            l.inclusiveSize = read_int_le(data, local_count);
+            l.filterMode = read_int_le(data, local_count);
+            l.shadingFlags = read_int_le(data, local_count);
+            l.textureId = read_int_le(data, local_count);
+            l.textureAnimationId = read_int_le(data, local_count);
+            l.coordId = read_int_le(data, local_count);
+            l.alpha = read_float_le(data, local_count);
+            if (local_count < l.inclusiveSize) {
+                kmta_handler _kmta_handler(data, local_count);
+                _kmta_handler.parse();
+                l.kmta_tracks = _kmta_handler.get_tracks();
+            }
+            if (local_count < l.inclusiveSize) {
+                kmtf_handler _kmtf_handler(data, local_count);
+                _kmtf_handler.parse();
+                l.kmtf_tracks = _kmtf_handler.get_tracks();
+            }
+
             count += l.inclusiveSize;
             m.layers.push_back(l);
         }

@@ -11,11 +11,11 @@ int kgrt_handler::get_tag() {
 
 void kgrt_handler::parse_track() {
     kgrt_track truck;
-    truck.frame = read_int_le(data);
-    truck.value = rotation(read_float_le(data), read_float_le(data), read_float_le(data), read_float_le(data));
+    truck.frame = read_int_le(data, count);
+    truck.value = rotation(read_float_le(data, count), read_float_le(data, count), read_float_le(data, count), read_float_le(data, count));
     if (interpolation_type > 0) {
-        truck.inTan = rotation(read_float_le(data), read_float_le(data), read_float_le(data), read_float_le(data));
-        truck.outTan = rotation(read_float_le(data), read_float_le(data), read_float_le(data), read_float_le(data));
+        truck.inTan = rotation(read_float_le(data, count), read_float_le(data, count), read_float_le(data, count), read_float_le(data, count));
+        truck.outTan = rotation(read_float_le(data, count), read_float_le(data, count), read_float_le(data, count), read_float_le(data, count));
     }
     tracks.push_back(truck);
 }

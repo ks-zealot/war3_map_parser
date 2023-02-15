@@ -11,11 +11,11 @@ int kgtr_handler::get_tag() {
 
 void kgtr_handler::parse_track() {
     kgtr_track truck;
-    truck.frame = read_int_le(data);
-    truck.value = translation(read_float_le(data), read_float_le(data), read_float_le(data));
+    truck.frame = read_int_le(data, count);
+    truck.value = translation(read_float_le(data, count), read_float_le(data, count), read_float_le(data, count));
     if (interpolation_type > 0) {
-        truck.inTan = translation(read_float_le(data), read_float_le(data), read_float_le(data));
-        truck.outTan = translation(read_float_le(data), read_float_le(data), read_float_le(data));
+        truck.inTan = translation(read_float_le(data, count), read_float_le(data, count), read_float_le(data, count));
+        truck.outTan = translation(read_float_le(data, count), read_float_le(data, count), read_float_le(data, count));
     }
     tracks.push_back(truck);
 }

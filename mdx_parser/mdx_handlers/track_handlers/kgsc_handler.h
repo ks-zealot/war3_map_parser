@@ -8,11 +8,11 @@
 
 #include "track_handler.h"
 
-#define KGTS  0x4475343
+#define KGSC  1128351563
 
 class kgsc_handler : public track_handler {
 public:
-    kgsc_handler(char *data) : track_handler(data) {};
+    kgsc_handler(char *&data, unsigned & count) : track_handler(data, count) {};
 
 
     const inline std::vector <kgsc_track> get_tracks() {

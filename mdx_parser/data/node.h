@@ -1,9 +1,14 @@
 //
 // Created by zealot on 09.02.2023.
 //
+#include <string>
+#include "../mdx_handlers/track_handlers/kgrt_handler.h"
+#include "../mdx_handlers/track_handlers/kgtr_handler.h"
+#include "../mdx_handlers/track_handlers/kgsc_handler.h"
 
 #ifndef WAR3_MAP_PARSER_NODE_H
 #define WAR3_MAP_PARSER_NODE_H
+
 struct node {
     unsigned inclusiveSize;
     std::string name;

@@ -8,11 +8,11 @@
 
 #include "track_handler.h"
 
-#define KGTR 0x4B475452
+#define KGTR 1381254987
 
 class kgtr_handler : public track_handler {
 public:
-    kgtr_handler(char *data) : track_handler(data) {};
+    kgtr_handler(char *&data, unsigned& count) : track_handler(data, count) {};
 
 
     const inline std::vector <kgtr_track> get_tracks() {

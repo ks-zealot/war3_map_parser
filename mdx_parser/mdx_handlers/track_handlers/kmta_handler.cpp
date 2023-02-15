@@ -10,12 +10,12 @@ int kmta_handler::get_tag() {
 }
 
 void kmta_handler::parse_track() {
-    kmta_truck truck;
-    truck.frame = read_int_le(data);
-    truck.value = read_float_le(data);
+    kmta_track track;
+    track.frame = read_int_le(data, count);
+    track.value = read_float_le(data, count);
     if (interpolation_type > 0) {
-        truck.inTan = read_float_le(data);
-        truck.outTan = read_float_le(data);
+        track.inTan = read_float_le(data, count);
+        track.outTan = read_float_le(data, count);
     }
-    tracks.push_back(truck);
+    tracks.push_back(track);
 }

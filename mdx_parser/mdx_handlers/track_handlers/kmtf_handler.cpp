@@ -11,11 +11,11 @@ int kmtf_handler::get_tag() {
 
 void kmtf_handler::parse_track() {
     kmtf_track truck;
-    truck.frame = read_int_le(data);
-    truck.value = read_int_le(data);
+    truck.frame = read_int_le(data, count);
+    truck.value = read_int_le(data, count);
     if (interpolation_type > 0) {
-        truck.inTan = read_int_le(data);
-        truck.outTan = read_int_le(data);
+        truck.inTan = read_int_le(data, count);
+        truck.outTan = read_int_le(data, count);
     }
     tracks.push_back(truck);
 }

@@ -11,11 +11,11 @@ int kgao_handler::get_tag() {
 
 void kgao_handler::parse_track() {
     kgao_track truck;
-    truck.frame = read_int_le(data);
-    truck.value = read_float_le(data);
+    truck.frame = read_int_le(data, count);
+    truck.value = read_float_le(data, count);
     if (interpolation_type > 0) {
-        truck.inTan = read_float_le(data);
-        truck.outTan = read_float_le(data);
+        truck.inTan = read_float_le(data, count);
+        truck.outTan = read_float_le(data, count);
     }
     tracks.push_back(truck);
 }

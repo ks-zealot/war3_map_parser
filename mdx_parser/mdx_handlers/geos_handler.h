@@ -6,6 +6,7 @@
 #define WAR3_MAP_PARSER_GEOS_HANDLER_H
 
 
+#include <cstdint>
 #include "handler.h"
 #include "../data/extent.h"
 
@@ -34,7 +35,7 @@ struct geoset {
     unsigned faceGroupsCount;
     std::vector<unsigned> faceGroups;
     unsigned facesCount;
-    std::vector<unsigned> faces;
+    std::vector<uint16_t> faces;
     unsigned vertexGroupsCount;
     std::vector<unsigned char> vertexGroups;
     unsigned matrixGroupsCount;

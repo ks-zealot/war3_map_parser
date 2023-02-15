@@ -11,12 +11,13 @@
 
 class track_handler {
 public:
-    track_handler(char *data) : data(data) {};
+    track_handler(char *&data, unsigned& count) : data(data), count(count) {};
 
     virtual void parse();
 
 protected:
-    char *data;
+    char *&data;
+    unsigned& count;
     unsigned tag;
     unsigned tracks_count;
     unsigned interpolation_type;// 0: none

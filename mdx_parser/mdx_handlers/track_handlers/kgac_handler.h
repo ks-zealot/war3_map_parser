@@ -7,13 +7,11 @@
 
 #include "track_handler.h"
 
-#define KGAC 0x4B474143
+#define KGAC 1128351563
 
 class kgac_handler : public track_handler {
 public:
-    kgac_handler(char *data) : track_handler(data) {};
-
-
+    kgac_handler(char *&data, unsigned& count) : track_handler(data, count) {};
 
     const inline std::vector<kgac_track> get_tracks() {
         return tracks;

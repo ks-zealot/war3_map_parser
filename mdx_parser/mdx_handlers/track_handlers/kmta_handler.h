@@ -8,14 +8,14 @@
 
 #include "track_handler.h"
 
-#define KMTA 0x4B4D5441
+#define KMTA 1128351563
 
 class kmta_handler : public track_handler {
 public:
-    kmta_handler(char *data) : track_handler(data) {};
+    kmta_handler(char *&data, unsigned& count) : track_handler(data, count) {};
 
 
-    const inline std::vector<kmta_truck> get_tracks() {
+    const inline std::vector<kmta_track> get_tracks() {
         return tracks;
     }
 private:

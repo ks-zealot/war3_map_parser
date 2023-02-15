@@ -36,7 +36,7 @@ uint16_t read_int_16_le(char *&bytes) {
     } dst;
     dst.b[0] = bytes[0];
     dst.b[1] = bytes[1];
-    bytes+=2;
+    bytes += 2;
     return dst.i;
 }
 
@@ -50,7 +50,7 @@ unsigned read_int_le(char *&bytes) {
     dst.b[1] = bytes[1];
     dst.b[2] = bytes[2];
     dst.b[3] = bytes[3];
-    bytes+=4;
+    bytes += 4;
     return dst.i;
 }
 
@@ -65,8 +65,23 @@ float read_float_le(char *&bytes) {
     dst.b[2] = bytes[2];
     dst.b[3] = bytes[3];
     sum = dst.f;
-    bytes+=4;
+    bytes += 4;
     return sum;
+}
+
+unsigned read_int_le(char *&data, unsigned &count) {
+    count += 4;
+    return read_int_le(data);
+}
+
+float read_float_le(char *&data, unsigned &count) {
+    count += 4;
+    return read_float_le(data);
+}
+
+uint16_t read_int_16_le(char *&data, unsigned &count) {
+    count += 2;
+    return read_int_16_le(data);
 }
 
 // Swaps a signed 16-bit integer

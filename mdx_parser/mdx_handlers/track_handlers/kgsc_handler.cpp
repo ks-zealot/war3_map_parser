@@ -6,16 +6,16 @@
 #include "../../../map_parser/util.h"
 
 int kgsc_handler::get_tag() {
-    return KGTS;
+    return KGSC;
 }
 
 void kgsc_handler::parse_track() {
     kgsc_track truck;
-    truck.frame = read_int_le(data);
-    truck.value = scaling(read_float_le(data), read_float_le(data), read_float_le(data));
+    truck.frame = read_int_le(data, count);
+    truck.value = scaling(read_float_le(data, count), read_float_le(data, count), read_float_le(data, count));
     if (interpolation_type > 0) {
-        truck.inTan = scaling(read_float_le(data), read_float_le(data), read_float_le(data));
-        truck.outTan = scaling(read_float_le(data), read_float_le(data), read_float_le(data));
+        truck.inTan = scaling(read_float_le(data, count), read_float_le(data, count), read_float_le(data, count));
+        truck.outTan = scaling(read_float_le(data, count), read_float_le(data, count), read_float_le(data, count));
     }
     tracks.push_back(truck);
 }

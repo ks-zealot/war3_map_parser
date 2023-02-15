@@ -8,11 +8,11 @@
 
 #include "track_handler.h"
 
-#define KGAO 0x4B47414F
+#define KGAO 1329678155
 
 class kgao_handler : public track_handler {
 public:
-    kgao_handler(char *data) : track_handler(data) {};
+    kgao_handler(char *&data, unsigned& count) : track_handler(data, count) {};
 
 
     const inline std::vector<kgao_track> get_tracks() {

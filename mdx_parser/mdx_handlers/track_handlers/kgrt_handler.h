@@ -8,11 +8,11 @@
 
 #include "track_handler.h"
 
-#define KGRT 0x4B475254
+#define KGRT 1381254987
 
 class kgrt_handler : public track_handler {
 public:
-    kgrt_handler(char *data) : track_handler(data) {};
+    kgrt_handler(char *&data, unsigned& count) : track_handler(data, count) {};
 
 
     const inline std::vector<kgrt_track> get_tracks() {
