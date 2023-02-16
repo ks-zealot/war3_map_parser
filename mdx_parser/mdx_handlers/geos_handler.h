@@ -70,6 +70,10 @@ public:
 
     virtual void parse() override;
 
+    inline const std::vector<geoset> get_geosets() {
+        return geosets;
+    }
+
 private:
     std::vector<geoset> geosets;
 

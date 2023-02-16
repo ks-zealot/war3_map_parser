@@ -9,6 +9,7 @@
 #include <fstream>
 #include <unordered_map>
 #include "mdx_handlers/handler.h"
+#include "mdx_model.h"
 
 #define VERS 1397900630
 #define MODL 1279545165
@@ -20,6 +21,8 @@
 #define BONE 1162760002
 #define HELP 1347175752
 #define PIVT 1414941008
+#define GLBS 1396853831
+#define TXAN 1312905300
 
 class mdx_parser {
 public:
@@ -29,8 +32,11 @@ public:
 
 private:
     std::ifstream file;
+    mdx_model model;
 
-    handler*  get_handler(unsigned id, char* data, int size);
+    void  handle_data(unsigned id, char* data, int size);
+
+    void produce_model();
 };
 
 

@@ -70,7 +70,7 @@ add_executable(War3_Map_Parser main.cpp
         mdx_parser/mdx_handlers/track_handlers/kgtr_handler.h
         mdx_parser/mdx_handlers/track_handlers/kgtr_handler.cpp
         mdx_parser/mdx_handlers/track_handlers/kgsc_handler.h
-        mdx_parser/mdx_handlers/track_handlers/kgsc_handler.cpp mdx_parser/mdx_handlers/bone_handler.cpp mdx_parser/mdx_handlers/help_handler.h mdx_parser/mdx_handlers/help_handler.cpp mdx_parser/mdx_handlers/pivt_handler.h mdx_parser/mdx_handlers/pivt_handler.cpp)
+        mdx_parser/mdx_handlers/track_handlers/kgsc_handler.cpp mdx_parser/mdx_handlers/bone_handler.cpp mdx_parser/mdx_handlers/help_handler.h mdx_parser/mdx_handlers/help_handler.cpp mdx_parser/mdx_handlers/pivt_handler.h mdx_parser/mdx_handlers/pivt_handler.cpp mdx_parser/mdx_handlers/glbs_handler.h mdx_parser/mdx_handlers/glbs_handler.cpp mdx_parser/mdx_handlers/snds_handler.h mdx_parser/mdx_handlers/snds_handler.cpp mdx_parser/mdx_handlers/txan_handler.h mdx_parser/mdx_handlers/txan_handler.cpp mdx_parser/mdx_model.h mdx_parser/mdx_model.cpp)
 target_link_libraries(War3_Map_Parser PRIVATE BZip2::BZip2 ZLIB::ZLIB ${PNG_LIBRARIES})
 add_executable(test_tileset data_objects/war3_inner_object/tileset_entry.h map_parser/util.cpp test/test_tileset.cpp data_objects/parser_inner_object/Vertex.h)
 target_link_libraries(test_tileset)
