@@ -59,6 +59,7 @@ void mdx_parser::handle_data(unsigned id, char *data, int size) {
         case TEXS: {
             texs_handler h(data, size);
             h.parse();
+            model.textures = h.get_textures();
             break;
         }
         case GEOS: {
@@ -103,10 +104,10 @@ void mdx_parser::produce_model() {
 // Create a model with a single mesh and save it as a gltf file
 
 
-
+    tinygltf::Model m;
+    tinygltf::Asset asset;
     unsigned count = 0;
-    geoset &g = model.geosets[0];
-//    for (geoset &g: model.geosets) {
+    for (geoset &g: model.geosets) {
         for (int i = 0; i < g.faceTypeGroupsCount; i++) {
             unsigned face_group_count = g.faceGroups[i];
             unsigned face_group_type = g.faceTypeGroups[i];//triangle
@@ -118,9 +119,9 @@ void mdx_parser::produce_model() {
                 verticies.push_back(Vertex(g.vertexPositions[j], g.vertexPositions[j + 1], g.vertexPositions[j + 2]));
             }
             tinygltf::Scene scene;
-            tinygltf::Model m;
+
             tinygltf::Node node;
-            tinygltf::Asset asset;
+
             tinygltf::Mesh mesh;
             tinygltf::Primitive primitive;
             tinygltf::Buffer buffer;
@@ -212,26 +213,26 @@ void mdx_parser::produce_model() {
             m.bufferViews.push_back(bufferView2);
             m.accessors.push_back(accessor1);
             m.accessors.push_back(accessor2);
-            asset.version = "2.0";
-            asset.generator = "tinygltf";
-            m.asset = asset;
-            tinygltf::Material mat;
-            mat.pbrMetallicRoughness.baseColorFactor = {1.0f, 0.9f, 0.9f, 1.0f};
-            mat.doubleSided = true;
-            m.materials.push_back(mat);
-            tinygltf::TinyGLTF gltf;
-            gltf.WriteGltfSceneToFile(&m, "tree.gltf", //todo remove hardcode
-                                      true, // embedImages
-                                      true, // embedBuffers
-                                      true, // pretty print
-                                      false); // write binary
+
         }
-//    }
+    }
 
     // Other tie ups
-
-
     // Define the asset. The version is required
+    asset.version = "2.0";
+    asset.generator = "tinygltf";
+    m.asset = asset;
+    tinygltf::Material mat;
+    mat.pbrMetallicRoughness.baseColorFactor = {1.0f, 0.9f, 0.9f, 1.0f};
+    mat.doubleSided = true;
+    m.materials.push_back(mat);
+    tinygltf::TinyGLTF gltf;
+    gltf.WriteGltfSceneToFile(&m, "tree.gltf", //todo remove hardcode
+                              true, // embedImages
+                              true, // embedBuffers
+                              true, // pretty print
+                              false); // write binary
+
 
 
 

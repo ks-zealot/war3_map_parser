@@ -21,8 +21,12 @@ public:
 
     virtual void parse() override;
 
+    const inline std::vector<texture> get_textures() {
+        return textures;
+    }
+
 private:
-    std::vector<texture> sequences;
+    std::vector<texture> textures;
 };
 
 

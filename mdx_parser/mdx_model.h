@@ -8,11 +8,12 @@
 
 #include <vector>
 #include "mdx_handlers/geos_handler.h"
+#include "mdx_handlers/texs_handler.h"
 
 class mdx_model {
 public:
     std::vector<geoset> geosets;
-
+    std::vector<texture> textures;
 };
 
 
